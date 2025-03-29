@@ -5,13 +5,12 @@ import config from "./config";
 const logStream = pino.destination("./logs/app.log");
 
 /**
- * Logger function for custom logs 
+ * Logger function for custom logs
  */
 export const logger = pino({}, logStream);
 
-
 /**
- * Logger middleware to log all requests 
+ * Logger middleware to log all requests
  */
 export const loggerMiddleware = pinoHttp({
   logger,
@@ -20,7 +19,8 @@ export const loggerMiddleware = pinoHttp({
       method: req.method,
       url: req.url,
       query: req.query,
-      params: req.params
+      params: req.params,
+      // body: req.body,
     }),
     res: (res) => ({
       statusCode: res.statusCode,
