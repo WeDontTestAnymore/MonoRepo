@@ -1,4 +1,4 @@
-# API Server 
+# API Server
 
 To install dependencies:
 ```bash
@@ -7,7 +7,7 @@ bun install
 
 To run live development server (bring your own external dependencies):
 ```bash
-bun run dev 
+bun run dev
 ```
 
 ---
@@ -46,7 +46,7 @@ INFO: [Server started at 3000]
 
 
 #### `POST` /auth/login
-Can be used to register a session with the backend. 
+Can be used to register a session with the backend.
 
 Data format:
 ```
@@ -58,4 +58,30 @@ Data format:
     "bucket_access_key_id" : "minioadmin",
     "bucket_secret_access_key" : "minioadmin"
 }
+```
+
+#### `POST` /bucket/scan
+
+Can be used to scan the bucket for tables.
+
+Data format:
+```
+{
+  "maxDepth": 3
+}
+```
+
+Example return:
+```
+{
+	"tables": [
+		{
+			"type": "ICEBERG",
+			"path": "s3://datalake/iceberg/users/"
+		},
+		{
+			"type": "DELTA",
+			"path": "s3://datalake/delta/employment/"
+		}
+	]
 ```
