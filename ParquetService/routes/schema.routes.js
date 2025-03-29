@@ -1,10 +1,12 @@
 import express from "express"
-
+import { DuckDBInstance } from "@duckdb/node-api";
 const router = express.Router();
 
 router.get("/show", getSchema);
 
 async function getSchema(req, res) {
+    const instance = await DuckDBInstance.create(':memory:');
+    const connection = await instance.connect();
     const { config, tables3uri } = req.body;
     try {
         if (!config.key) {
@@ -36,6 +38,8 @@ async function getSchema(req, res) {
 
         const query = `DESCRIBE SELECT * FROM '${tables3uri}';`
         
+        console.log("query is : ",query);
+
         const result = await connection.runAndReadAll(query);
         const schema = result.getRowObjectsJson();
         //console.log(rows);
@@ -48,4 +52,5 @@ async function getSchema(req, res) {
 }
 
 
+export default router;
 

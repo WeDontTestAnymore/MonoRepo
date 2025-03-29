@@ -1,7 +1,8 @@
 import express from "express";
 import schemaRoutes  from "./routes/schema.routes.js";
+import rowGroupStatsRoutes from "./routes/row-group.routes.js" 
 
-const app = express = express();
+const app=express();
 
 const PORT = 3001;
 app.use(express.json());
