@@ -59,15 +59,70 @@ npm run dev
 
 ```json
 {
-    "config": {
-        "key": "your-access-key",
-        "secret": "your-secret-key",
-        "endpoint": "s3.your-endpoint.com"
+    {
+    "config":{
+        "key":"adityaaparadh",
+        "secret":"TN9Z55pOnU%3rc",
+        "endpoint":"s3.aditya.software"
     },
-    "tables3uri": "s3://your-bucket/your-table.parquet",
-    "action": "your-action"
+    "tables3uri":"s3://datalake/employment/employment.parquet" 
+}"
 }
 ```
+
+## Example Request Body
+
+```json
+{
+    {
+    "schema": [
+        {
+            "column_name": "userid",
+            "column_type": "VARCHAR",
+            "null": "YES",
+            "key": null,
+            "default": null,
+            "extra": null
+        },
+        {
+            "column_name": "salary",
+            "column_type": "INTEGER",
+            "null": "YES",
+            "key": null,
+            "default": null,
+            "extra": null
+        },
+        {
+            "column_name": "organization",
+            "column_type": "VARCHAR",
+            "null": "YES",
+            "key": null,
+            "default": null,
+            "extra": null
+        },
+        {
+            "column_name": "yearsOfExperience",
+            "column_type": "INTEGER",
+            "null": "YES",
+            "key": null,
+            "default": null,
+            "extra": null
+        },
+        {
+            "column_name": "joinedAt",
+            "column_type": "TIMESTAMP",
+            "null": "YES",
+            "key": null,
+            "default": null,
+            "extra": null
+        }
+    ]
+}
+}
+
+
+
+
 
 Replace `"your-action"` with `countRowGroups`, `countRows`, `getStats`, or `getRange` based on the request.
 
