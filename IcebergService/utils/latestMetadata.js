@@ -65,8 +65,6 @@ export const latestMetadata = async (config, s3tableuri) => {
     }
 
 
-
-
 };
 
 // Test Configuration
