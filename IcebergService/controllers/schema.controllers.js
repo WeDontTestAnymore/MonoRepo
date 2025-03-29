@@ -1,4 +1,4 @@
-import icebergMetadata from '../refs/iceberg_default_employment_data_metadata_v2.metadata.json' assert { type: 'json' };
+//import icebergMetadata from '../refs/iceberg_default_employment_data_metadata_v2.metadata.json' assert { type: 'json' };
 import { randGen } from "../utils/misc.js"
 import { latestMetadata } from '../utils/latestMetadata.js';
 

@@ -1,5 +1,5 @@
 import { DuckDBInstance } from "@duckdb/node-api";
-import { initializeDuckDBWithS3 } from "../utils/duck-db.js";
+
 import { filesize } from "filesize";
 
 //config contains minio access details and tables3uri contains location for table to fetch metadta
