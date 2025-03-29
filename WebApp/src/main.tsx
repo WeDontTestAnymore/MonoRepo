@@ -8,6 +8,7 @@ import {
 import Layout from "./Layout";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import HomePage from "./pages/HomePage";
+import ExplorePage from "./pages/ExplorePage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import "./index.css";
@@ -31,6 +32,14 @@ const router = createBrowserRouter(
         element={
           <ProtectedRoute>
             <SignUpPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="explore"
+        element={
+          <ProtectedRoute>
+            <ExplorePage />
           </ProtectedRoute>
         }
       />
