@@ -6,6 +6,7 @@ import { logger, loggerMiddleware } from "./utils/logger";
 import cookieParser from "cookie-parser";
 import bucketRouter from "./routes/bucketRouter";
 import deltaRouter from "./routes/deltaRouter";
+import hudiRouter from "./routes/hudiRouter";
 
 const app = Express();
 
@@ -20,6 +21,8 @@ if (config.LOGGING === 1) {
 app.use("/auth", authRouter);
 app.use("/bucket", bucketRouter);
 app.use("/delta", deltaRouter);
+app.use("/hudi", hudiRouter);
+
 app.get("/ping", (req, res) => {
   res.status(200).send({ message: "pong" });
 });

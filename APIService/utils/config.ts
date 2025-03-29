@@ -4,6 +4,7 @@ interface Config {
   LOGGING: number;
   MAX_SCAN_DEPTH: number;
   DELTA_SERVICE_URL: string;
+  HUDI_SERVICE_URL: string;
 }
 
 /**
@@ -26,6 +27,7 @@ const config: Config = {
   LOGGING: Number(getEnvVariable("LOGGING")),
   MAX_SCAN_DEPTH: Number(getEnvVariable("MAX_SCAN_DEPTH")),
   DELTA_SERVICE_URL: getEnvVariable("DELTA_SERVICE_URL"),
+  HUDI_SERVICE_URL: getEnvVariable("HUDI_SERVICE_URL"),
 };
 
 export default config;

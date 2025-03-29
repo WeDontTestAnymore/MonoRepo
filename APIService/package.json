@@ -5,13 +5,16 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
-    "prisma": "^6.5.0"
+    "prisma": "^6.5.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "scripts": {
-    "dev": "bunx prisma migrate dev && bun run --hot index.ts & tail -f logs/app.log | bunx pino-pretty --colorize --singleLine --ignore \"pid,hostname\" --messageFormat \"[{msg}]\"; wait"
+    "dev": "bunx prisma migrate dev && bun run --hot index.ts & tail -f logs/app.log | bunx pino-pretty --colorize --singleLine --ignore \"pid,hostname\" --messageFormat \"[{msg}]\"; wait",
+    "start": "node --loader ts-node/esm index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.777.0",
