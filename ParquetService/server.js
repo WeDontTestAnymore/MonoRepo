@@ -11,6 +11,7 @@ app.use("/api/schema",schemaRoutes);
 app.use("/api/row-groups-stats",rowGroupStatsRoutes);
 
 
+
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
