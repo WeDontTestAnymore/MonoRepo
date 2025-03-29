@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URI")
+}
+
+model Session {
+  id                       Int       @id @default(autoincrement())
+  created_time             DateTime? @default(now()) @db.Timestamp(6)
+  uuid                     String
+  bucket_type              bucket
+  bucket_uri               String
+  bucket_name              String
+  bucket_region            String
+  bucket_access_key_id     String
+  bucket_secret_access_key String
+}
+
+enum bucket {
+  AWS
+  R2
+  Azure
+  Other
+}

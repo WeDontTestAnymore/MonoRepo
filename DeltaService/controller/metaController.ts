@@ -1,5 +1,5 @@
 import type { Request, RequestHandler, Response } from "express";
-import { connection } from "../duckdb/duck";
+import { connection } from "../db/duck";
 import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
 
 interface ICommitsRequest {
@@ -11,15 +11,6 @@ interface ICommitsRequest {
   deltaDirectory: string;
 }
 
-// interface ISchemaRequest {
-//   accessKey: string;
-//   secretKey: string;
-//   region: string;
-//   endpoint: string;
-//   urlStyle: "path" | "virtual";
-//   tablePath: string;
-//   commitFileName: string;
-// }
 interface ISchemaRequest {
   accessKey: string;
   secretKey: string;
@@ -118,6 +109,41 @@ export const getCommits = async (req: Request, res: Response) => {
   }
 };
 
+export const getStats = async (req: Request, res: Response) => {
+  try {
+    const body = req.body as ISchemaRequest;
+    await connection.run(`
+        CREATE OR REPLACE SECRET secret (
+            TYPE s3,
+            KEY_ID '${body.accessKey}',
+            SECRET '${body.secretKey}',
+            REGION '${body.region}',
+            ENDPOINT '${body.endpoint}',
+            URL_STYLE '${body.urlStyle}'
+        )`);
+
+    const result = await connection.run(`
+        SELECT * FROM '${body.fileDirectory}';
+    `);
+
+    const cols = await result.getColumnsJson();
+    console.log(cols);
+    /**
+     * @todo fix ts here
+     */
+    const stats = cols[2][2].stats;
+
+    res.send({ stats });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error occurred",
+      details: err instanceof Error ? err.stack : undefined,
+    });
+  }
+};
+
 // export const getCheckpoints = async (req: Request, res: Response) => {
 //   try {
 //     const body = req.body as ISchemaRequest;
@@ -192,6 +218,7 @@ export const getSchema = async (req: Request, res: Response) => {
     `);
 
     const cols = await result.getColumnsJson();
+    console.log(cols);
     /**
      * @todo fix ts here
      */
