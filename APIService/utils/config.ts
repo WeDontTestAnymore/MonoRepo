@@ -2,6 +2,7 @@ interface Config {
   BACKEND_PORT: string;
   COOKIE_TIMEOUT_MIN: string;
   LOGGING: number;
+  MAX_SCAN_DEPTH: number;
 }
 
 /**
@@ -21,7 +22,8 @@ const getEnvVariable = (key: keyof Config): string => {
 const config: Config = {
   BACKEND_PORT: getEnvVariable("BACKEND_PORT"),
   COOKIE_TIMEOUT_MIN: getEnvVariable("COOKIE_TIMEOUT_MIN"),
-  LOGGING: Number(getEnvVariable("LOGGING"))
+  LOGGING: Number(getEnvVariable("LOGGING")),
+  MAX_SCAN_DEPTH: Number(getEnvVariable("MAX_SCAN_DEPTH")),
 };
 
 export default config;
