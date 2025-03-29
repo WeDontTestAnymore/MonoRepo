@@ -73,6 +73,8 @@ export default function CloudProviderForm() {
           // Step 3: Store metadata in Redux
           dispatch(setTableCred(metadataResponse.data.tables));
 
+          console.log(metadataResponse.data.tables);
+
           // Extract base path (e.g., "s3://datalake")
           const firstPath = metadataResponse.data.tables[0]?.path || "";
           const extractedBasePath = firstPath.split("/").slice(0, 3).join("/");

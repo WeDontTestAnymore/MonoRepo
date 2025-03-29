@@ -67,11 +67,12 @@ const TableSchema = ({ selectedTable }: TableSchemaProps) => {
 
             const fileDirectory = `${basePath}${selectedTable}/_delta_log/${latestCommit}`;
 
-            console.log("🚀 ~ handleDelta ~ fileDirectory:", fileDirectory);
-            const latestCommitResponse = await apiClient.post(
-              "/delta/schema",
-              fileDirectory
-            );
+            console.log("🚀 ~ handleDelta ~ fileDirectory 1:", fileDirectory);
+
+            const latestCommitResponse = await apiClient.post("/delta/schema", {
+              fileDirectory: fileDirectory,
+            });
+
             console.log(
               "🚀 ~ handleDelta ~ latestCommitResponse:",
               latestCommitResponse
@@ -90,10 +91,11 @@ const TableSchema = ({ selectedTable }: TableSchemaProps) => {
       } else {
         const fileDirectory = `${basePath}${selectedTable}/_delta_log/${latestCommit}`;
 
-        const latestCommitResponse = await apiClient.post(
-          "/delta/schema",
-          fileDirectory
-        );
+        console.log("Inside else");
+
+        const latestCommitResponse = await apiClient.post("/delta/schema", {
+          fileDirectory: fileDirectory,
+        });
 
         if (latestCommitResponse.status === 200) {
           setDataToShow(latestCommitResponse.data.schema);
@@ -112,15 +114,18 @@ const TableSchema = ({ selectedTable }: TableSchemaProps) => {
   const handleHudi = async () => {
     setLoading(true);
     try {
-      const hudi_table_path = selectedTable.split("/").filter(Boolean)[1];
+      console.log("🚀 ~ handleHudi ~ selectedTable:", selectedTable);
+      const hudi_table_path = selectedTable.split("/").slice(1).join("/");
       console.log("🚀 ~ handleHudi ~ hudi_table_path:", hudi_table_path);
 
-      const response = await apiClient.post("/hudi/schema", {
-        hudi_table_path: hudi_table_path,
+      const response = await apiClient.get("/hudi/schema/", {
+        params: { hudi_table_path: hudi_table_path },
       });
+
       console.log("🚀 ~ handleHudi ~ response:", response);
 
       if (response.status === 200) {
+        console.log("🚀 ~ handleHudi ~ response.data:", response.data);
         setDataToShow(response.data.schema);
       } else {
         console.error("Failed to fetch Hudi table schema.");
@@ -157,14 +162,20 @@ const TableSchema = ({ selectedTable }: TableSchemaProps) => {
 
   useEffect(() => {
     const table = tableCred?.find((t) => t.path.includes(selectedTable));
+    console.log("🚀 ~ useEffect ~ tableCred:", tableCred);
+    console.log("🚀 ~ useEffect ~ selectedTable:", selectedTable);
+    console.log("🚀 ~ useEffect ~ table:", table);
 
     if (table) {
       const { type } = table;
       if (type === "DELTA") {
+        setDataToShow(null); // Clear previous data
         handleDelta();
       } else if (type === "HUDI") {
+        setDataToShow(null); 
         handleHudi();
       } else if (type === "ICEBERG") {
+        setDataToShow(null);
         handleIceberg();
       }
     }

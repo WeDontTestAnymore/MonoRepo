@@ -68,10 +68,9 @@ const KeyMetrics = ({ selectedTable }: KeyMetricsProps) => {
             const fileDirectory = `${basePath}${selectedTable}/_delta_log/${latestCommit}`;
 
             console.log("🚀 ~ handleDelta ~ fileDirectory:", fileDirectory);
-            const latestCommitResponse = await apiClient.post(
-              "/delta/stats",
-              fileDirectory
-            );
+            const latestCommitResponse = await apiClient.post("/delta/stats", {
+              fileDirectory: fileDirectory,
+            });
             console.log(
               "🚀 ~ handleDelta ~ latestCommitResponse:",
               latestCommitResponse
@@ -87,6 +86,22 @@ const KeyMetrics = ({ selectedTable }: KeyMetricsProps) => {
           }
         } catch (error) {
           toast.error("Error fetching commits");
+        }
+      } else {
+        const fileDirectory = `${basePath}${selectedTable}/_delta_log/${latestCommit}`;
+        console.log("🚀 ~ handleDelta ~ fileDirectory:", fileDirectory);
+        const latestCommitResponse = await apiClient.post("/delta/stats", {
+          fileDirectory: fileDirectory,
+        });
+        console.log(
+          "🚀 ~ handleDelta ~ latestCommitResponse:",
+          latestCommitResponse
+        );
+
+        if (latestCommitResponse.status === 200) {
+          setDataToShow(latestCommitResponse.data.schema);
+        } else {
+          toast.error("Failed to fetch latest commit schema.");
         }
       }
     } catch (error) {
