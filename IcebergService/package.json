@@ -1,0 +1,26 @@
+{
+  "name": "iceberg-node",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.774.0",
+    "@duckdb/node-api": "^1.2.1-alpha.16",
+    "avro-js": "^1.12.0",
+    "avsc": "^5.7.7",
+    "aws-sdk": "^2.1692.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "filesize": "^10.1.6",
+    "fs": "^0.0.1-security",
+    "nodemon": "^3.1.9",
+    "path": "^0.12.7"
+  }
+}
