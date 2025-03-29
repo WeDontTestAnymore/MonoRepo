@@ -66,7 +66,7 @@ npm run dev
         "endpoint":"s3.aditya.software"
     },
     "tables3uri":"s3://datalake/employment/employment.parquet" 
-}"
+}
 }
 ```
 
