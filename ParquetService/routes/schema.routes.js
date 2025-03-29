@@ -37,9 +37,9 @@ async function getSchema(req, res) {
         const query = `DESCRIBE SELECT * FROM '${tables3uri}';`
         
         const result = await connection.runAndReadAll(query);
-        const rows = result.getRowObjectsJson();
-        console.log(rows);
-        return rows;
+        const schema = result.getRowObjectsJson();
+        //console.log(rows);
+        res.status(200).json({schema})
 
     } catch (error) {
         console.log("error in getSchema", error.message);
