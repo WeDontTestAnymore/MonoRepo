@@ -109,13 +109,66 @@ const TableSchema = ({ selectedTable }: TableSchemaProps) => {
     }
   };
 
-  useEffect(() => {
-    const tempFormat = selectedTable.split("/").filter(Boolean)[0];
+  const handleHudi = async () => {
+    setLoading(true);
+    try {
+      const hudi_table_path = selectedTable.split("/").filter(Boolean)[1];
+      console.log("🚀 ~ handleHudi ~ hudi_table_path:", hudi_table_path);
 
-    if (tempFormat === "delta") {
-      handleDelta();
+      const response = await apiClient.post("/hudi/schema", {
+        hudi_table_path: hudi_table_path,
+      });
+      console.log("🚀 ~ handleHudi ~ response:", response);
+
+      if (response.status === 200) {
+        setDataToShow(response.data.schema);
+      } else {
+        console.error("Failed to fetch Hudi table schema.");
+      }
+    } catch (error) {
+      console.error("Error fetching Hudi table schema:", error);
+      toast.error("Error fetching Hudi table schema.");
+    } finally {
+      setLoading(false);
     }
-  }, [selectedTable]); // ✅ Added dependency array
+  };
+
+  const handleIceberg = async () => {
+    setLoading(true);
+    try {
+      const icebergPath = `${basePath}${selectedTable}`;
+      console.log("🚀 ~ handleIceberg ~ icebergPath:", icebergPath);
+
+      const response = await apiClient.post("/iceberg/schema", {
+        icebergPath: icebergPath,
+      });
+      console.log("🚀 ~ handleIceberg ~ response:", response);
+
+      if (response.status === 200) {
+        setDataToShow(response.data.schema);
+      } else {
+        console.error("Failed to fetch Iceberg table schema.");
+      }
+    } catch (error) {
+      console.error("Error fetching Iceberg table schema:", error);
+      toast.error("Error fetching Iceberg table schema.");
+    }
+  };
+
+  useEffect(() => {
+    const table = tableCred?.find((t) => t.path.includes(selectedTable));
+
+    if (table) {
+      const { type } = table;
+      if (type === "DELTA") {
+        handleDelta();
+      } else if (type === "HUDI") {
+        handleHudi();
+      } else if (type === "ICEBERG") {
+        handleIceberg();
+      }
+    }
+  }, [selectedTable]);
 
   if (loading) {
     return <div>Loading...</div>;
