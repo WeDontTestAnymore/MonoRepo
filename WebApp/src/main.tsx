@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
+import MetadataPage from "./pages/MetadataPage";
 import "./index.css";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
@@ -43,6 +44,7 @@ const router = createBrowserRouter(
           </ProtectedRoute>
         }
       />
+      <Route path="metadata" element={<MetadataPage />} />
     </Route>
   )
 );
