@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 # Sample postgres db for testing
 services:
   db:
@@ -9,43 +9,56 @@ services:
       - postgresdb:/data/postgres
     ports:
       - "5432:5432"
+    networks:
+      - hackathon
     environment:
       POSTGRES_USER: "root"
-      POSTGRES_PASSWORD: "123" 
+      POSTGRES_PASSWORD: "123"
       PGDATA: /data/postgres
-      POSTGRES_DB: hack 
+      POSTGRES_DB: hack
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d postgres" ]
+      test: ["CMD-SHELL", "pg_isready -d postgres"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  adminer:
-    image: adminer
-    restart: always
+  # Adminer for db
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - 8080:8080
+
+  # MinIO bucket for local s3 storage
+  # minio:
+  #   image: minio/minio
+  #   container_name: minio
+  #   ports:
+  #     - "9000:9000" # API port
+  #     - "9001:9001" # Console port
+  #   volumes:
+  #     - minio_data:/data
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin
+  #   command: server --console-address ":9001" /data
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 30s
+  #     timeout: 20s
+  #     retries: 3
+  #   restart: unless-stopped
+
+  delta:
+    container_name: delta
+    image: delta-service:latest
     ports:
-      - 8080:8080
-      
-  minio:
-    image: minio/minio
-    container_name: minio
-    ports:
-      - "9000:9000"  # API port
-      - "9001:9001"  # Console port
-    volumes:
-      - minio_data:/data
+      - "3001:3001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server --console-address ":9001" /data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    restart: unless-stopped
-    
+      - PORT=3001
+    networks:
+      - hackathon
   backend:
     build:
       context: .
@@ -54,8 +67,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      minio:
-        condition: service_healthy  # Not really
+    #minio:
+    #  condition: service_healthy # Not really
     ports:
       - "3000:3000"
     environment:
@@ -63,11 +76,19 @@ services:
       - LOGGING=1
       - BACKEND_PORT=3000
       - COOKIE_TIMEOUT_MIN=60
+      - MAX_SCAN_DEPTH=2
+      - DELTA_SERVICE_URL=http://delta:3001
     restart: unless-stopped
-    # volumes:                        # enable this to persist logs across restarts ( also uncomment the volume below) 
+    networks:
+      - hackathon
+    # volumes:                        # enable this to persist logs across restarts ( also uncomment the volume below)
     #   - backend_logs:/app/logs
 
 volumes:
   postgresdb:
-  minio_data:
+#  minio_data:
 #  backend_logs:
+
+networks:
+  hackathon:
+    driver: bridge
