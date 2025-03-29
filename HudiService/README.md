@@ -26,6 +26,10 @@ The server will start by default at `http://localhost:8000`
 
 ---
 
+
+
+
+
 ## API Endpoints
 
 ### 1. Generic API
@@ -35,105 +39,8 @@ The server will start by default at `http://localhost:8000`
 
 ---
 
-### 2. Versioning
 
-**Endpoint:**  
-`GET http://127.0.0.1:8000/versioning`
-
-**Query Parameters:**
-- `endpoint=https://s3.your-endpoint.com`
-- `access_key=your-access-key`
-- `secret_key=your-secret-key`
-- `bucket_name=datalake`
-- `hudi_table_path=hudi_large_table`
-
----
-
-### 3. Schema Extraction
-
-**Endpoint:**  
-`GET http://localhost:8000/schema`
-
-**Query Parameters:**
-- `endpoint=https://s3.your-endpoint.com`
-- `access_key=your-access-key`
-- `secret_key=your-secret-key`
-- `bucket_name=datalake`
-- `hudi_table_path=hudi_large_table`
-
----
-
-### 4. Partitions Details
-
-**Endpoint:**  
-`GET http://127.0.0.1:8000/partitions`
-
-**Query Parameters:**
-- `endpoint=https://s3.your-endpoint.com`
-- `access_key=your-access-key`
-- `secret_key=your-secret-key`
-- `bucket_name=datalake`
-- `hudi_table_path=hudi_large_table`
-
----
-
-### 5. Sample Data Extraction
-
-**Endpoint:**  
-`GET http://127.0.0.1:8000/sample-data`
-
-**Query Parameters:**
-- `endpoint=https://s3.your-endpoint.com`
-- `access_key=your-access-key`
-- `secret_key=your-secret-key`
-- `bucket_name=datalake`
-- `hudi_table_path=hudi_large_table`
-- `row_limit=10`
-
----
-
-### 6. Key Metrics
-
-**Endpoint:**  
-`GET http://127.0.0.1:8000/key-metrics`
-
-**Query Parameters:**
-- `endpoint=https://s3.your-endpoint.com`
-- `access_key=your-access-key`
-- `secret_key=your-secret-key`
-- `bucket_name=datalake`
-- `hudi_table_path=hudi_large_table`
-
----
-
-### 7. Small Files Warning
-
-**Endpoint:**  
-`GET http://127.0.0.1:8000/small-files-warning`
-
-**Query Parameters:**
-- `endpoint=https://s3.your-endpoint.com`
-- `access_key=your-access-key`
-- `secret_key=your-secret-key`
-- `bucket_name=datalake`
-- `hudi_table_path=hudi_large_table`
-
----
-
-### 8. Fetch Table Names
-
-**Endpoint:**  
-`GET http://127.0.0.1:8000/tables`
-
-**Query Parameters:**
-- `endpoint=https://s3.your-endpoint.com`
-- `access_key=your-access-key`
-- `secret_key=your-secret-key`
-- `bucket_name=datalake`
-
----
-
-## Example Query Parameters
+## Example Query Parameters for all endpoints
 
 ```txt
 endpoint=https://s3.aditya.software
@@ -143,4 +50,54 @@ bucket_name=datalake
 hudi_table_path=hudi_large_table
 ```
 
-Replace these values with your actual credentials and Hudi table details.
+
+### 2. Versioning
+
+**Endpoint:**  
+`GET http://127.0.0.1:8000/versioning`
+
+---
+
+### 3. Schema Extraction
+
+**Endpoint:**  
+`GET http://localhost:8000/schema`
+
+---
+
+### 4. Partitions Details
+
+**Endpoint:**  
+`GET http://127.0.0.1:8000/partitions`
+
+---
+
+### 5. Sample Data Extraction
+
+**Endpoint:**  
+`GET http://127.0.0.1:8000/sample-data`
+
+---
+
+### 6. Key Metrics
+
+**Endpoint:**  
+`GET http://127.0.0.1:8000/key-metrics`
+
+---
+
+### 7. Small Files Warning
+
+**Endpoint:**  
+`GET http://127.0.0.1:8000/small-files-warning`
+
+---
+
+### 8. Fetch Table Names
+
+**Endpoint:**  
+`GET http://127.0.0.1:8000/tables`
+
+---
+
+
