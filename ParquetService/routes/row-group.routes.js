@@ -5,43 +5,27 @@ import connection from "./dbConnection";
 
 router.get("/count", countRowGroups);
 router.get("/countRows",countRows);
-
+router.get("/stats",getStats);
+router.get("/range",getRange);
 
 async function countRowGroups(req, res) {
     try {
-        const { config, tables3uri } = req.body;
-
-        if (!config?.key) {
-            return res.status(400).json({ error: "s3 key not provided" });
+        const { config, tables3uri} = req.body;
+        query = "";
+        const count = executeQuery(config,tables3uri,query);
+        res.status(500).json({count});
+        async function countRows(req, res) {
+            try {
+                const { config, tables3uri} = req.body;
+                query = "";
+                const count = executeQuery(config,tables3uri,query);
+                res.status(500).json({count});
+                
+            } catch (error) {
+                console.log("error in countRowGroups func : ", error.message);
+                res.status(500).json({ error: "Internal server error" });
+            }
         }
-        if (!config?.secret) {
-            return res.status(400).json({ error: "s3 secret not provided" });
-        }
-        if (!config?.endpoint) {
-            return res.status(400).json({ error: "s3 endpoint not provided" });
-        }
-
-        if (!config.region) {
-            config.region = "us-east-1";
-        }
-
-        await connection.run(`CREATE OR REPLACE SECRET secret (
-            TYPE s3,
-            KEY_ID '${config.key}',
-            SECRET '${config.secret}',
-            REGION '${config.region}',
-            ENDPOINT '${config.endpoint}',
-            USE_SSL false,
-            URL_STYLE 'path'
-        );`)
-        console.log(`Initialized DuckDB S3 with key: ${config.key}, secret: ${config.secret}, region: ${config.region}`);
-
-        const query = ` SELECT count(distinct row_group_id ) FROM parquet_metadata(${tables3uri});`
-
-        const result = await connection.runAndReadAll(query);
-        const count = result.getRowObjectsJson();
-        res.status(200).json({count});
-
     } catch (error) {
         console.log("error in countRowGroups func : ", error.message);
         res.status(500).json({ error: "Internal server error" });
@@ -50,41 +34,43 @@ async function countRowGroups(req, res) {
 
 
 
-async function countRowGroups(req, res) {
+async function getStats(req, res) {
     try {
-        const { config, tables3uri } = req.body;
+        const { config, tables3uri} = req.body;
+        query = "";
+        const count = executeQuery(config,tables3uri,query);
+        res.status(500).json({count});
+        
+    } catch (error) {
+        console.log("error in countRowGroups func : ", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
 
-        if (!config?.key) {
-            return res.status(400).json({ error: "s3 key not provided" });
-        }
-        if (!config?.secret) {
-            return res.status(400).json({ error: "s3 secret not provided" });
-        }
-        if (!config?.endpoint) {
-            return res.status(400).json({ error: "s3 endpoint not provided" });
-        }
 
-        if (!config.region) {
-            config.region = "us-east-1";
-        }
+async function countRows(req, res) {
+    try {
+        const { config, tables3uri} = req.body;
+        query = `selct row_group_id, avg(num_values),
+        min(num_values),max(num_values) from parquet_metadata(${tables3uri} group 
+        by all;) `;
+        const count = executeQuery(config,tables3uri,query);
+        res.status(500).json({count});
+        
+    } catch (error) {
+        console.log("error in countRowGroups func : ", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
 
-        await connection.run(`CREATE OR REPLACE SECRET secret (
-            TYPE s3,
-            KEY_ID '${config.key}',
-            SECRET '${config.secret}',
-            REGION '${config.region}',
-            ENDPOINT '${config.endpoint}',
-            USE_SSL false,
-            URL_STYLE 'path'
-        );`)
-        console.log(`Initialized DuckDB S3 with key: ${config.key}, secret: ${config.secret}, region: ${config.region}`);
-
-        const query = ` SELECT distinct row_group_id, row_group_num_rows FROM parquet_metadata(${tables3uri});`
-
-        const result = await connection.runAndReadAll(query);
-        const countRows = result.getRowObjectsJson();
-        res.status(200).json({countRows});
-
+async function getRange(req, res) {
+    try {
+        const { config, tables3uri} = req.body;
+        query =   `select column_id,type,stats_min,stats_max
+        from parquet_metadata(${tables3uri})`;
+        const count = executeQuery(config,tables3uri,query);
+        res.status(500).json({count});
+        
     } catch (error) {
         console.log("error in countRowGroups func : ", error.message);
         res.status(500).json({ error: "Internal server error" });
