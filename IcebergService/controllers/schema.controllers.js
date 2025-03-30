@@ -12,6 +12,7 @@ export const getPartitionKeys = async (req, res) => {
 
         const icebergMetadata = await latestMetadata(config, s3uri);
         const partitions = icebergMetadata["partition-specs"];
+        if(partitions)
         return res.status(200).send({ partitions: partitions });
 
     } catch (error) {

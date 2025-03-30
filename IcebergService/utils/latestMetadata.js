@@ -34,20 +34,10 @@ export const latestMetadata = async (config, s3tableuri) => {
         console.log(`Initialized DuckDB S3 with key: ${config.key}, secret: ${config.secret}, region: ${config.region}`);
 
 
-        const versionHintLocation = `${s3tableuri}/metadata`;
-        console.log("versionhintlocation is", versionHintLocation);
-        const query = `select content from read_text('${versionHintLocation}/*.text');`
+      
 
-        await connection.run(query);
+        const latestVersionQuery = ``;
 
-        const result = await connection.runAndReadAll(query);
-        const rows = result.getRowObjectsJson();
-
-        const latestVersion = rows[0];
-
-        const latestVersionQuery = ` select * from read_json('${versionHintLocation}/*.json', union_by_name = true, filename = true) where filename LIKE '%2%.json';
-
-`
         console.log("query is: ",latestVersionQuery);
         await connection.run(latestVersionQuery);
 

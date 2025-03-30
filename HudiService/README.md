@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ### Navigate to the Project Directory
 
 ```sh
-cd Fastapi-hudi
+cd fastapi-hudi
 ```
 
 ### Start the Server

@@ -1,54 +1,56 @@
-# React + TypeScript + Vite
+# React + Vite Setup Guide
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This guide will help you set up a React project using Vite.
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+First, install Vite and create a new React project:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```sh
+npm create vite@latest my-react-app --template react-ts
+cd my-react-app
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Then, install dependencies:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```sh
+npm install
 ```
+
+## Running the Development Server
+
+Start the development server with:
+
+```sh
+npm run dev
+```
+
+By default, the server runs on [http://localhost:5173](http://localhost:5173).
+
+## Building for Production
+
+To build your project for production, run:
+
+```sh
+npm run build
+```
+
+The output will be in the `dist` folder.
+
+## Additional Configuration
+
+You can configure ESLint and Prettier for better code quality.
+
+To install ESLint:
+
+```sh
+npm install --save-dev eslint eslint-plugin-react eslint-plugin-react-hooks
+```
+
+To install Prettier:
+
+```sh
+npm install --save-dev prettier eslint-config-prettier eslint-plugin-prettier
+```
+
+Happy coding! 🚀
