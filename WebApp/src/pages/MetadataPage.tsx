@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Metadata/Sidebar";
 import TableSchema from "@/components/Metadata/TableSchema";
-import TableProperties from "@/components/Metadata/TableProperties";
 import QueryBuilder from "@/components/Metadata/QueryBuilder";
 import SchemaViewer from "@/components/Metadata/SchemaViewer";
 import { Toaster } from "sonner";
@@ -10,7 +9,11 @@ import { useSelector } from "react-redux";
 import apiClient from "@/services/axios.config";
 import { AppDispatch } from "@/store/store";
 import { useDispatch } from "react-redux";
-import { setTableCred, setBasePath } from "@/contexts/tableCred.slice";
+import {
+  setTableCred,
+  setBasePath,
+  addTableCred,
+} from "@/contexts/tableCred.slice";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -26,6 +29,8 @@ import HudiTableSchema from "@/components/Metadata/Hudi/HudiTableSchema";
 import HudiTableProperties from "@/components/Metadata/Hudi/HudiTableProperties";
 import HudiVersioning from "@/components/Metadata/Hudi/HudiVersioning";
 import HudiKeyMetrics from "@/components/Metadata/Hudi/HudiKeyMetrics";
+import ParquetInfo from "@/components/Metadata/Parquet/ParuqetInfo";
+import { TableTypes } from "@/contexts/tableCred.slice";
 
 const MetadataPage = () => {
   const [availableTables, setAvailableTables] = useState<string[]>([]);
@@ -33,7 +38,8 @@ const MetadataPage = () => {
   const [activeSection, setActiveSection] = useState("Schemas");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newPath, setNewPath] = useState("");
-  const [tableType, setTableType] = useState("delta");
+  const [tableType, setTableType] = useState("DELTA");
+  const [selectedTableType, setSelectedTableType] = useState("");
 
   const tableCred = useSelector(
     (state: RootState) => state.tableCred.tableCred
@@ -90,21 +96,29 @@ const MetadataPage = () => {
   }, [tableCredentials, dispatch]);
 
   const handleDiscoverPath = async () => {
-    try {
-      const response = await apiClient.post("/discover/path", {
-        path: newPath.replace(/\/$/, ""), // Remove trailing slash
-        type: tableType,
-      });
+    // try {
+    //   const response = await apiClient.post("/discover/path", {
+    //     path: newPath.replace(/\/$/, ""), // Remove trailing slash
+    //     type: tableType,
+    //   });
 
-      if (response.status === 200) {
-        console.log("Path discovered:", response.data);
-        setIsDialogOpen(false);
-      } else {
-        console.error("Failed to discover path.");
-      }
-    } catch (error) {
-      console.error("Error discovering path:", error);
-    }
+    //   if (response.status === 200) {
+    //     console.log("Path discovered:", response.data);
+    //     setIsDialogOpen(false);
+    //   } else {
+    //     console.error("Failed to discover path.");
+    //   }
+    // } catch (error) {
+    //   console.error("Error discovering path:", error);
+    // }
+
+    console.log("New Path:", newPath);
+    console.log("Table Type:", selectedTable);
+
+    dispatch(
+      addTableCred({ path: newPath, type: selectedTableType as TableTypes })
+    );
+    setIsDialogOpen(false);
   };
 
   const getTableType = (selectedTable: string) => {
@@ -131,6 +145,9 @@ const MetadataPage = () => {
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <div className="flex-1 overflow-auto px-6 pb-6">
           <div className="p-4 shadow rounded bg-white">
+            {activeSection === "ParquetItIs" && (
+              <ParquetInfo selectedTable={selectedTable} />
+            )}
             {activeSection === "Schemas" &&
               (tableType === "DELTA" ? (
                 <DeltaTableSchema selectedTable={selectedTable} />
@@ -191,15 +208,23 @@ const MetadataPage = () => {
             </div>
             {/* Dropdown - 1 part */}
             <div className="flex-[1]">
-              <Select value={tableType} onValueChange={setTableType}>
+              <Select
+                value={selectedTableType}
+                onValueChange={(value) => {
+                  console.log("Dropdown changed:", value); // Debug
+                  setSelectedTableType(value);
+                }}
+              >
                 <SelectTrigger className=" text-black border-gray-700 focus:ring-blue-500 focus:border-blue-500">
-                  <SelectValue placeholder="Type" />
+                  <SelectValue placeholder="Type">
+                    {selectedTableType || "PARQUET"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-white text-black border-gray-300">
-                  <SelectItem value="parquet">Parquet</SelectItem>
-                  <SelectItem value="delta">Delta</SelectItem>
-                  <SelectItem value="hudi">Hudi</SelectItem>
-                  <SelectItem value="iceberg">Iceberg</SelectItem>
+                  <SelectItem value="PARQUET">Parquet</SelectItem>
+                  <SelectItem value="DELTA">Delta</SelectItem>
+                  <SelectItem value="HUDI">Hudi</SelectItem>
+                  <SelectItem value="ICEBERG">Iceberg</SelectItem>
                 </SelectContent>
               </Select>
             </div>

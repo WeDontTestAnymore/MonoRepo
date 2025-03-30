@@ -12,6 +12,8 @@ import {
   CodeIcon,
   PackageIcon,
 } from "@hugeicons/core-free-icons";
+import { RootState } from "@/store/store";
+import { useSelector } from "react-redux";
 
 interface SidebarProps {
   selectedTable: string;
@@ -26,6 +28,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   setActiveSection,
   availableTables,
 }) => {
+  const tableCred = useSelector(
+    (state: RootState) => state.tableCred.tableCred
+  );
+
+  const getTableType = (tableName: string) => {
+    const table = tableCred?.find((table) => table.path.includes(tableName));
+    return table ? table.type : "unknown";
+  };
   interface Element {
     id: string;
     isSelectable?: boolean;
@@ -155,36 +165,64 @@ const Sidebar: React.FC<SidebarProps> = ({
             value="1"
             className="p-1 text-lg titillium-web-semibold"
           >
-            {availableTables.map((tableName, index) => (
-              <Folder
-                key={tableName}
-                value={tableName}
-                element={tableName}
-                className={`p-2 rounded-lg transition text-md ${
-                  selectedTable === tableName
-                    ? "bg-[#2C2C2C] text-white titillium-web-semibold"
-                    : "hover:bg-[#3A3A3A]"
-                }`}
-                onClick={() => setSelectedTable(tableName)}
-              >
-                {Array.isArray(ELEMENTS[0].children?.[index]?.children) &&
-                  ELEMENTS[0].children?.[index]?.children?.map((option) => (
-                    <File
-                      key={option.id}
-                      value={option.id}
-                      className={`p-2 pl-6 rounded-lg transition titillium-web-regular ${
-                        option.name === selectedTable
-                          ? "bg-[#2C2C2C] text-white font-bold"
-                          : "hover:bg-[#3A3A3A]"
-                      }`}
-                      onClick={() => setActiveSection(option.name)}
-                      fileIcon={option.icon}
-                    >
-                      {option.name}
-                    </File>
-                  ))}
-              </Folder>
-            ))}
+            {availableTables.map((tableName, index) => {
+              const tableType = getTableType(tableName);
+
+              if (tableType === "PARQUET") {
+                console.log("Table Type: ", tableType);
+                return (
+                  <File
+                    key={`parquet-${tableName}`}
+                    value={`parquet-${tableName}`}
+                    className="p-2 pl-6 rounded-lg transition titillium-web-regular hover:bg-[#3A3A3A]"
+                    fileIcon={
+                      <HugeiconsIcon
+                        icon={PackageIcon}
+                        className="w-5 h-5 mr-2 text-white"
+                      />
+                    }
+                    onClick={() => {
+                      setSelectedTable(tableName);
+                      setActiveSection(`ParquetItIs`);
+                      console.log("YES");
+                    }}
+                  >
+                    {tableName} (Parquet)
+                  </File>
+                );
+              }
+
+              return (
+                <Folder
+                  key={tableName}
+                  value={tableName}
+                  element={tableName}
+                  className={`p-2 rounded-lg transition text-md ${
+                    selectedTable === tableName
+                      ? "bg-[#2C2C2C] text-white titillium-web-semibold"
+                      : "hover:bg-[#3A3A3A]"
+                  }`}
+                  onClick={() => setSelectedTable(tableName)}
+                >
+                  {Array.isArray(ELEMENTS[0].children?.[index]?.children) &&
+                    ELEMENTS[0].children?.[index]?.children?.map((option) => (
+                      <File
+                        key={option.id}
+                        value={option.id}
+                        className={`p-2 pl-6 rounded-lg transition titillium-web-regular ${
+                          option.name === selectedTable
+                            ? "bg-[#2C2C2C] text-white font-bold"
+                            : "hover:bg-[#3A3A3A]"
+                        }`}
+                        onClick={() => setActiveSection(option.name)}
+                        fileIcon={option.icon}
+                      >
+                        {option.name}
+                      </File>
+                    ))}
+                </Folder>
+              );
+            })}
 
             {/* Schema Viewer */}
             <File
