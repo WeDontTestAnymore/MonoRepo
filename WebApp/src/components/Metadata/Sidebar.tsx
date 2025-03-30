@@ -174,7 +174,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <File
                     key={`parquet-${tableName}`}
                     value={`parquet-${tableName}`}
-                    className="p-2 pl-6 rounded-lg transition titillium-web-regular hover:bg-[#3A3A3A]"
+                    className="p-2 rounded-lg transition titillium-web-regular hover:bg-[#3A3A3A]"
                     fileIcon={
                       <HugeiconsIcon
                         icon={PackageIcon}
@@ -184,7 +184,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                     onClick={() => {
                       setSelectedTable(tableName);
                       setActiveSection(`ParquetItIs`);
-                      console.log("YES");
                     }}
                   >
                     {tableName} (Parquet)
@@ -202,7 +201,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                       ? "bg-[#2C2C2C] text-white titillium-web-semibold"
                       : "hover:bg-[#3A3A3A]"
                   }`}
-                  onClick={() => setSelectedTable(tableName)}
+                  onClick={() => {
+                    setSelectedTable(tableName);
+                  }}
                 >
                   {Array.isArray(ELEMENTS[0].children?.[index]?.children) &&
                     ELEMENTS[0].children?.[index]?.children?.map((option) => (

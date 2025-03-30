@@ -38,7 +38,7 @@ const MetadataPage = () => {
   const [activeSection, setActiveSection] = useState("Schemas");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newPath, setNewPath] = useState("");
-  const [tableType, setTableType] = useState("DELTA");
+  const [tableType, setTableType] = useState("");
   const [selectedTableType, setSelectedTableType] = useState("");
 
   const tableCred = useSelector(

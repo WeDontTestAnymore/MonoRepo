@@ -37,6 +37,7 @@ const HudiVersioning = ({ selectedTable }: HudiVersioningProps) => {
       const response = await apiClient.post("/hudi/versioning", {
         hudi_table_path: tableName.replace(/^\/+/, ""),
       });
+      console.log("🚀 ~ fetchHudiVersioning ~ response:", response);
 
       if (response.status === 200) {
         interface VersionField {
@@ -51,7 +52,13 @@ const HudiVersioning = ({ selectedTable }: HudiVersioningProps) => {
         }
 
         const fetchedVersions: Version[] = response.data.versioning_history.map(
-          (v: { last_modified: string; schema: { name: string; type: string[] }[] }, index: number) => ({
+          (
+            v: {
+              last_modified: string;
+              schema: { name: string; type: string[] }[];
+            },
+            index: number
+          ) => ({
             id: `v${index + 1}`,
             label: `Version ${index + 1} (${new Date(
               v.last_modified
@@ -195,25 +202,31 @@ const HudiVersioning = ({ selectedTable }: HudiVersioningProps) => {
       <div className="bg-white shadow-md rounded-lg p-4 mt-6">
         <h3 className="text-lg font-semibold mb-3">Schema Changes</h3>
         <div className="border p-4 rounded-md bg-white text-black font-mono">
-          {changes.map((change) => (
-            <div
-              key={change.name}
-              className={`py-1 px-2 rounded-md ${
-                change.status === "removed"
-                  ? "bg-red-200 text-red-900"
-                  : change.status === "added"
-                  ? "bg-green-200 text-green-900"
-                  : change.status === "modified"
-                  ? "bg-yellow-200 text-yellow-900"
-                  : "bg-white"
-              }`}
-            >
-              {change.status === "removed" && "- "}
-              {change.status === "added" && "+ "}
-              {change.status === "modified" && "~ "}
-              {change.name}: {change.type}
+          {changes.length > 0 ? (
+            changes.map((change) => (
+              <div
+                key={change.name}
+                className={`py-1 px-2 rounded-md ${
+                  change.status === "removed"
+                    ? "bg-red-200 text-red-900"
+                    : change.status === "added"
+                    ? "bg-green-200 text-green-900"
+                    : change.status === "modified"
+                    ? "bg-yellow-200 text-yellow-900"
+                    : "bg-white"
+                }`}
+              >
+                {change.status === "removed" && "- "}
+                {change.status === "added" && "+ "}
+                {change.status === "modified" && "~ "}
+                {change.name}: {change.type}
+              </div>
+            ))
+          ) : (
+            <div className="text-green-600 font-semibold">
+              No changes detected.
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

@@ -7,7 +7,6 @@ import { Lock, Globe, Folder, Key, Link } from "lucide-react"; // Icons
 import s3Bucket from "@/assets/s3Bucket.png";
 import azureBlob from "@/assets/azureBlob.png";
 import minIo from "@/assets/minIo.png";
-import cloudFlare from "@/assets/cloudflare.png";
 import { useNavigate } from "react-router-dom";
 import { InteractiveHoverButton } from "../magicui/interactive-hover-button";
 import { MultiStepLoader } from "../ui/multi-step-loader"; // Loader Component
@@ -21,7 +20,6 @@ import { setBasePath } from "@/contexts/tableCred.slice";
 const cloudProviders = [
   { id: "AWS", name: "AWS", logo: s3Bucket },
   { id: "Azure", name: "Azure", logo: azureBlob },
-  { id: "R2", name: "Cloudflare R2", logo: cloudFlare },
   { id: "Other", name: "Custom", logo: minIo },
 ];
 

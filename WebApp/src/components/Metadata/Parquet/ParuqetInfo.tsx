@@ -3,6 +3,14 @@ import apiClient from "@/services/axios.config";
 import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface ParquetInfoProps {
   selectedTable: string;
@@ -55,11 +63,16 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
         statDataResponse
       );
 
+      console.log(
+        "🚀 ~ fetchParquetInfo ~ statDataResponse.data.data:",
+        statDataResponse.data.countRows
+      );
+
       const rowGroups =
-        statDataResponse?.data?.data?.countRowGroups?.[0]?.rgcount || 0;
-      const rows = statDataResponse?.data?.data?.countRows || [];
+        statDataResponse?.data?.countRowGroups?.[0]?.rgcount || 0;
+      const rows = statDataResponse.data.countRows || [];
       console.log(rows);
-      const columnStats = statDataResponse?.data?.data?.getRange || [];
+      const columnStats = statDataResponse.data.getRange || [];
 
       setRowGroups(rowGroups);
       setRows(rows);
@@ -77,56 +90,60 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
   }, [selectedTable]);
 
   if (loading) {
-    return <div className="text-center text-white">Loading...</div>;
+    return <div className="text-center text-black">Loading...</div>;
   }
 
   return (
-    <div className="p-4 bg-[#1E1E1E] text-white rounded-lg">
-      <h2 className="text-lg font-semibold mb-2">
-        Parquet Table: {selectedTable}
+    <div className="p-6 bg-white text-gray-900 rounded-lg shadow-md">
+      <h2 className="text-xl font-semibold mb-4 border-b border-gray-300 pb-2">
+        Parquet Table: <span className="text-blue-600">{selectedTable}</span>
       </h2>
 
       {/* Table Schema */}
-      <div className="mb-4">
-        <h3 className="text-md font-semibold mb-1">Schema</h3>
-        <div className="bg-[#2C2C2C] p-3 rounded-md overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-600 text-left">
-                <th className="p-2">Column Name</th>
-                <th className="p-2">Type</th>
-                <th className="p-2">Nullable</th>
-                <th className="p-2">Key</th>
-              </tr>
-            </thead>
-            <tbody>
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Schema</h3>
+        <div className="border border-gray-300 rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-100">
+                <TableHead>Column Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Nullable</TableHead>
+                <TableHead>Key</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {schema.map((col, index) => (
-                <tr key={index} className="border-b border-gray-700">
-                  <td className="p-2">{col.column_name}</td>
-                  <td className="p-2">{col.column_type}</td>
-                  <td className="p-2">
+                <TableRow key={index} className="hover:bg-gray-50">
+                  <TableCell>{col.column_name}</TableCell>
+                  <TableCell>{col.column_type}</TableCell>
+                  <TableCell>
                     {col.null === "YES" ? "✅ Yes" : "❌ No"}
-                  </td>
-                  <td className="p-2">{col.key || "N/A"}</td>
-                </tr>
+                  </TableCell>
+                  <TableCell>{col.key || "N/A"}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
       {/* Row Groups & Row Counts */}
-      <div className="mb-4">
-        <h3 className="text-md font-semibold mb-1">Row Groups</h3>
-        <p className="bg-[#2C2C2C] p-3 rounded-md">
-          Total Row Groups: {rowGroups}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Row Groups</h3>
+        <p className="border border-gray-300 bg-gray-50 p-4 rounded-md">
+          <span className="font-bold text-blue-600">Total Row Groups:</span>{" "}
+          {rowGroups}
         </p>
 
-        <h3 className="text-md font-semibold mt-3">Rows per Group</h3>
-        <div className="bg-[#2C2C2C] p-3 rounded-md">
+        <h3 className="text-lg font-semibold mt-4 mb-2">Rows per Group</h3>
+        <div className="border border-gray-300 bg-gray-50 p-4 rounded-md">
           {rows.map((row, index) => (
             <p key={index}>
-              Group {row.row_group_id}: {row.row_group_num_rows} rows
+              <span className="font-semibold text-blue-600">
+                Group {row.row_group_id}:
+              </span>{" "}
+              {row.row_group_num_rows} rows
             </p>
           ))}
         </div>
@@ -134,28 +151,28 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
 
       {/* Column Statistics */}
       <div>
-        <h3 className="text-md font-semibold mb-1">Column Statistics</h3>
-        <div className="bg-[#2C2C2C] p-3 rounded-md overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-600 text-left">
-                <th className="p-2">Column ID</th>
-                <th className="p-2">Type</th>
-                <th className="p-2">Min</th>
-                <th className="p-2">Max</th>
-              </tr>
-            </thead>
-            <tbody>
+        <h3 className="text-lg font-semibold mb-2">Column Statistics</h3>
+        <div className="border border-gray-300 rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-100">
+                <TableHead>Column ID</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Min</TableHead>
+                <TableHead>Max</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {columnStats.map((stat, index) => (
-                <tr key={index} className="border-b border-gray-700">
-                  <td className="p-2">{stat.column_id}</td>
-                  <td className="p-2">{stat.type}</td>
-                  <td className="p-2">{stat.stats_min || "N/A"}</td>
-                  <td className="p-2">{stat.stats_max || "N/A"}</td>
-                </tr>
+                <TableRow key={index} className="hover:bg-gray-50">
+                  <TableCell>{stat.column_id}</TableCell>
+                  <TableCell>{stat.type}</TableCell>
+                  <TableCell>{stat.stats_min || "N/A"}</TableCell>
+                  <TableCell>{stat.stats_max || "N/A"}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>
