@@ -13,7 +13,7 @@ interface ScanConfig {
 }
 
 interface TableLocation {
-  type: "ICEBERG" | "DELTA";
+  type: "ICEBERG" | "DELTA" | "HOODIE";
   path: string;
 }
 
@@ -84,41 +84,43 @@ async function scanBucket(
   if (currentDepth >= config.maxDepth) {
     return [];
   }
-
   const tables: TableLocation[] = [];
   const prefixStack = [config.prefix || ""];
 
   while (prefixStack.length > 0) {
     const currentPrefix = prefixStack.pop()!;
     const depth = currentPrefix.split("/").filter(Boolean).length;
-
     if (depth > config.maxDepth) {
       continue;
     }
-
     const params: ListObjectsV2CommandInput = {
       Bucket: config.bucket,
       Prefix: currentPrefix,
       Delimiter: "/",
     };
-
     try {
-      const command = new ListObjectsV2Command(params);
-      const response = await s3Client.send(command);
+      const response = await s3Client.send(new ListObjectsV2Command(params));
+      const hasMetadata = response.CommonPrefixes?.some((p) =>
+        p.Prefix?.endsWith("metadata/"),
+      );
+      const hasDeltaLog = response.CommonPrefixes?.some((p) =>
+        p.Prefix?.endsWith("_delta_log/"),
+      );
+      const hasHoodie = response.CommonPrefixes?.some((p) =>
+        p.Prefix?.endsWith(".hoodie/"),
+      );
 
-      const hasDataFolder = response.CommonPrefixes?.some((prefix) =>
-        prefix.Prefix?.endsWith("data/"),
-      );
-      const hasMetadataFolder = response.CommonPrefixes?.some((prefix) =>
-        prefix.Prefix?.endsWith("metadata/"),
-      );
-      if (hasDataFolder && hasMetadataFolder) {
-        const isIceberg = await isIcebergTable(
-          s3Client,
-          config.bucket,
-          currentPrefix,
+      if (hasMetadata) {
+        // Check for at least one .metadata.json file
+        const metaParams = {
+          ...params,
+          Prefix: `${currentPrefix}metadata/`,
+          Delimiter: undefined,
+        };
+        const metaRes = await s3Client.send(
+          new ListObjectsV2Command(metaParams),
         );
-        if (isIceberg) {
+        if (metaRes.Contents?.some((c) => c.Key?.endsWith(".metadata.json"))) {
           tables.push({
             type: "ICEBERG",
             path: `s3://${config.bucket}/${currentPrefix}`,
@@ -126,10 +128,6 @@ async function scanBucket(
           continue;
         }
       }
-      const hasDeltaLog = response.CommonPrefixes?.some((prefix) =>
-        prefix.Prefix?.endsWith("_delta_log/"),
-      );
-
       if (hasDeltaLog) {
         tables.push({
           type: "DELTA",
@@ -137,10 +135,15 @@ async function scanBucket(
         });
         continue;
       }
-      response.CommonPrefixes?.forEach((prefix) => {
-        if (prefix.Prefix) {
-          prefixStack.push(prefix.Prefix);
-        }
+      if (hasHoodie) {
+        tables.push({
+          type: "HOODIE",
+          path: `s3://${config.bucket}/${currentPrefix}`,
+        });
+        continue;
+      }
+      response.CommonPrefixes?.forEach((p) => {
+        if (p.Prefix) prefixStack.push(p.Prefix);
       });
     } catch (error) {
       console.error(`Error scanning prefix ${currentPrefix}:`, error);

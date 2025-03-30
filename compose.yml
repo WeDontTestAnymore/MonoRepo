@@ -1,0 +1,119 @@
+version: "3.9"
+services:
+  db:
+    container_name: postgres
+    image: postgres
+    shm_size: 128mb
+    volumes:
+      - postgresdb:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - hackathon
+    environment:
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "123"
+      PGDATA: /data/postgres
+      POSTGRES_DB: hack
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Adminer for db
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - 8080:8080
+
+  # MinIO bucket for local s3 storage
+  # minio:
+  #   image: minio/minio
+  #   container_name: minio
+  #   ports:
+  #     - "9000:9000" # API port
+  #     - "9001:9001" # Console port
+  #   volumes:
+  #     - minio_data:/data
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin
+  #   command: server --console-address ":9001" /data
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 30s
+  #     timeout: 20s
+  #     retries: 3
+  #   restart: unless-stopped
+
+  iceberg:
+    container_name: iceberg-service
+    image: ghcr.io/wedonttestanymore/iceberg-service:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+    networks:
+      - hackathon
+
+  delta:
+    container_name: delta-service
+    image: ghcr.io/wedonttestanymore/delta-service:latest
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+    networks:
+      - hackathon
+
+  hudi:
+    container_name: hudi-service
+    image: ghcr.io/wedonttestanymore/hudi-service:latest
+    ports:
+      - "8000:3050"
+    networks:
+      - hackathon
+
+  parquet:
+    container_name: parquet-service
+    image: ghcr.io/wedonttestanymore/parquet-service:latest
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+    networks:
+      - hackathon
+
+  backend:
+    image: ghcr.io/wedonttestanymore/api-service
+    container_name: api_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_URI=postgresql://root:123@db:5432/hack
+      - LOGGING=1
+      - BACKEND_PORT=3000
+      - COOKIE_TIMEOUT_MIN=60
+      - MAX_SCAN_DEPTH=2
+      - ICEBERG_SERVICE_URL=http://iceberg-service:3001
+      - DELTA_SERVICE_URL=http://delta-service:3002
+      - HUDI_SERVICE_URL=http://hudi-service:3050
+      - PARQUET_SERVICE_URL=http://parquet-service:3004
+    restart: unless-stopped
+    networks:
+      - hackathon
+
+volumes:
+  postgresdb:
+#  minio_data:
+#  backend_logs:
+
+networks:
+  hackathon:
+    driver: bridge
