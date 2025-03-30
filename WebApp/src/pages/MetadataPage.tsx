@@ -4,8 +4,6 @@ import TableSchema from "@/components/Metadata/TableSchema";
 import TableProperties from "@/components/Metadata/TableProperties";
 import QueryBuilder from "@/components/Metadata/QueryBuilder";
 import SchemaViewer from "@/components/Metadata/SchemaViewer";
-import Versioning from "@/components/Metadata/Versioning";
-import KeyMetrics from "@/components/Metadata/KeyMetrics";
 import { Toaster } from "sonner";
 import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
@@ -24,6 +22,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import DeltaTableSchema from "@/components/Metadata/Delta/DeltaTableSchema";
+import HudiTableSchema from "@/components/Metadata/Hudi/HudiTableSchema";
+import HudiTableProperties from "@/components/Metadata/Hudi/HudiTableProperties";
+import HudiVersioning from "@/components/Metadata/Hudi/HudiVersioning";
+import HudiKeyMetrics from "@/components/Metadata/Hudi/HudiKeyMetrics";
 
 const MetadataPage = () => {
   const [availableTables, setAvailableTables] = useState<string[]>([]);
@@ -132,18 +134,35 @@ const MetadataPage = () => {
             {activeSection === "Schemas" &&
               (tableType === "DELTA" ? (
                 <DeltaTableSchema selectedTable={selectedTable} />
+              ) : tableType === "HOODIE" ? (
+                <HudiTableSchema selectedTable={selectedTable} />
               ) : (
                 <TableSchema selectedTable={selectedTable} />
               ))}
-            {activeSection === "Properties" && (
-              <TableProperties selectedTable={selectedTable} />
-            )}
-            {activeSection === "Versioning & Snapshots" && (
-              <Versioning selectedTable={selectedTable} />
-            )}
-            {activeSection === "Key Metrics" && (
-              <KeyMetrics selectedTable={selectedTable} />
-            )}
+            {activeSection === "Properties" &&
+              (tableType === "DELTA" ? (
+                <DeltaTableSchema selectedTable={selectedTable} />
+              ) : tableType === "HOODIE" ? (
+                <HudiTableProperties selectedTable={selectedTable} />
+              ) : (
+                <TableSchema selectedTable={selectedTable} />
+              ))}
+            {activeSection === "Versioning & Snapshots" &&
+              (tableType === "DELTA" ? (
+                <DeltaTableSchema selectedTable={selectedTable} />
+              ) : tableType === "HOODIE" ? (
+                <HudiVersioning selectedTable={selectedTable} />
+              ) : (
+                <TableSchema selectedTable={selectedTable} />
+              ))}
+            {activeSection === "Key Metrics" &&
+              (tableType === "DELTA" ? (
+                <DeltaTableSchema selectedTable={selectedTable} />
+              ) : tableType === "HOODIE" ? (
+                <HudiKeyMetrics selectedTable={selectedTable} />
+              ) : (
+                <TableSchema selectedTable={selectedTable} />
+              ))}
             {activeSection === "Schema Viewer" && <SchemaViewer />}
             {activeSection === "Run Query" && <QueryBuilder />}
           </div>

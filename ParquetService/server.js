@@ -3,13 +3,13 @@ import { DuckDBInstance } from "@duckdb/node-api";
 import { executeQuery } from "./executeQuery.js";
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3004;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Schema Route
-app.get("/schema/show", async (req, res) => {
+app.post("/schema/show", async (req, res) => {
   const instance = await DuckDBInstance.create(":memory:");
   const connection = await instance.connect();
   const { config, parquetPath } = req.body;
@@ -34,7 +34,7 @@ app.get("/schema/show", async (req, res) => {
         `);
 
     console.log(
-      `Initialized DuckDB S3 with key: ${config.access_key}, secret: ${config.secret_key}, region: ${config.region}`
+      `Initialized DuckDB S3 with key: ${config.access_key}, secret: ${config.secret_key}, region: ${config.region}`,
     );
 
     const query = `DESCRIBE SELECT * FROM '${parquetPath}';`;
@@ -63,7 +63,7 @@ app.post("/row-groups-stats/parquet", async (req, res) => {
     const results = await Promise.all(
       Object.entries(queries).map(async ([key, query]) => ({
         [key]: await executeQuery(config, query),
-      }))
+      })),
     );
 
     res.status(200).json(Object.assign({}, ...results));

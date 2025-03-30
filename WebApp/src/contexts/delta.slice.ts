@@ -27,8 +27,14 @@ const commitSlice = createSlice({
     setSelectedTable: (state, action: PayloadAction<string>) => {
       state.selectedTable = action.payload;
     },
+    clearCommits: (state) => {
+      state.allCommits = [];
+      state.latestCommit = null;
+      state.oldestCommit = null;
+      state.selectedTable = "";
+    },
   },
 });
 
-export const { setCommits } = commitSlice.actions;
+export const { setCommits, setSelectedTable, clearCommits } = commitSlice.actions;
 export default commitSlice.reducer;

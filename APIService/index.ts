@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import bucketRouter from "./routes/bucketRouter";
 import deltaRouter from "./routes/deltaRouter";
 import hudiRouter from "./routes/hudiRouter";
+import parquetRouter from "./routes/parquetRouter";
 
 const app = Express();
 
@@ -22,6 +23,7 @@ app.use("/auth", authRouter);
 app.use("/bucket", bucketRouter);
 app.use("/delta", deltaRouter);
 app.use("/hudi", hudiRouter);
+app.use("/parquet", parquetRouter);
 
 app.get("/ping", (req, res) => {
   res.status(200).send({ message: "pong" });

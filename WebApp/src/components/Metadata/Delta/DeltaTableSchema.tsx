@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
 import apiClient from "@/services/axios.config";
-import { setCommits } from "@/contexts/delta.slice";
+import { setCommits, clearCommits } from "@/contexts/delta.slice";
 import {
   Table,
   TableHeader,
@@ -73,6 +73,9 @@ const TableSchema = ({ selectedTable }: TableSchemaProps) => {
 
   const handleDelta = async () => {
     setLoading(true);
+    console.log("allCommits:", allCommits);
+    console.log("latestCommit:", latestCommit);
+    console.log("currentTable:", currentTable);
     try {
       if (allCommits?.length > 0 && currentTable === selectedTable) {
         const fileDirectory = `${basePath}${selectedTable}/_delta_log/${latestCommit}`;
@@ -161,13 +164,13 @@ const TableSchema = ({ selectedTable }: TableSchemaProps) => {
   };
 
   useEffect(() => {
-    if (!latestCommit) {
-      handleDelta();
-    } else {
-      setSelectedCommit(latestCommit);
-      fetchSchema(latestCommit);
+    setSchema([]); // Reset schema when table changes
+    setSelectedCommit(null); // Reset selected commit
+    if (currentTable !== selectedTable) {
+      dispatch(clearCommits());
     }
-  }, [selectedTable]);
+    handleDelta();
+  }, []);
 
   if (loading) {
     return <div>Loading...</div>;
