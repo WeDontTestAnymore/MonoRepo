@@ -5,7 +5,8 @@ import { getPartitionDetails } from "../controllers/properties.controllers.js";
 
 const router = express.Router();
 
-router.get("/show",getProperties);
-router.get("/manifestFiles",getManifestFiles);
+router.post("/show",getProperties);
+// router.post("/manifestFiles",getManifestFiles);
+// router.get("/partitionDetails",getPartitionDetails);
 
 export default router   
