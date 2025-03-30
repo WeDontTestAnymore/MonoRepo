@@ -2,14 +2,17 @@ import { DuckDBInstance } from "@duckdb/node-api";
 
 export const executeQuery = async (config, query) => {
   try {
-    if (!config?.key) {
-      return res.status(400).json({ error: "s3 key not provided" });
+    if (!config?.access_key) {
+      // return res.status(400).json({ error: "s3 key not provided" });
+      throw new Error("s3 key not provided");
     }
-    if (!config?.secret) {
-      return res.status(400).json({ error: "s3 secret not provided" });
+    if (!config?.secret_key) {
+      // return res.status(400).json({ error: "s3 secret not provided" });
+      throw new Error("s3 secret not provided");
     }
     if (!config?.endpoint) {
-      return res.status(400).json({ error: "s3 endpoint not provided" });
+      // return res.status(400).json({ error: "s3 endpoint not provided" });
+      throw new Error("s3 endpoint not provided");
     }
 
     if (!config.region) {
@@ -21,15 +24,15 @@ export const executeQuery = async (config, query) => {
 
     await connection.run(`CREATE OR REPLACE SECRET secret (
             TYPE s3,
-            KEY_ID '${config.key}',
-            SECRET '${config.secret}',
+            KEY_ID '${config.access_key}',
+            SECRET '${config.secret_key}',
             REGION '${config.region}',
             ENDPOINT '${config.endpoint}',
             USE_SSL false,
             URL_STYLE 'path'
         );`);
     console.log(
-      `Initialized DuckDB S3 with key: ${config.key}, secret: ${config.secret}, region: ${config.region}`
+      `Initialized DuckDB S3 with key: ${config.access_key}, secret: ${config.secret_key}, region: ${config.region}`,
     );
 
     const result = await connection.runAndReadAll(query);
