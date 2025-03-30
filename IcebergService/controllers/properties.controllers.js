@@ -1,8 +1,13 @@
-//import icebergMetadata from '../refs/iceberg_default_employment_data_metadata_v2.metadata.json' assert { type: 'json' };
+import icebergMetadata from '../refs/iceberg_default_employment_data_metadata_v2.metadata.json' assert { type: 'json' };
+import { latestMetadata } from '../utils/latestMetadata.js';
 import { listObjects } from "../utils/listObjects.js"
 import { s3setup } from "../utils/s3.js"
 
+
+
 export const getProperties = async (req, res) => {
+    const {config,icebergPath} = req.body;
+    const icebergMetadata = latestMetadata(config,icebergPath);
     try {
         const properties = {
             tableFormat: "iceberg",

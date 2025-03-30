@@ -51,7 +51,7 @@ const getDetails = async (req, res) => {
 }
 
 
-router.get("/details", getDetails);
+router.post("/details", getDetails);
 
 
 export default router
