@@ -13,9 +13,7 @@ export const getSchema = async (req: Request, res: Response) => {
 
     const response = await axios.get(`${config.HUDI_SERVICE_URL}/schema`, {
       params: {
-        endpoint: req.awsEndpoint
-          .replace("http://", "")
-          .replace("https://", ""),
+        endpoint: req.awsEndpoint?.trim(),
         access_key: req.awsAccessKeyId,
         secret_key: req.awsSecretAccessKey,
         bucket_name: req.awsBucketName,
@@ -40,9 +38,7 @@ export const getPartitions = async (req: Request, res: Response) => {
 
     const response = await axios.get(`${config.HUDI_SERVICE_URL}/partitions`, {
       params: {
-        endpoint: req.awsEndpoint
-          .replace("http://", "")
-          .replace("https://", ""),
+        endpoint: req.awsEndpoint?.trim(),
         access_key: req.awsAccessKeyId,
         secret_key: req.awsSecretAccessKey,
         bucket_name: req.awsBucketName,
@@ -67,9 +63,7 @@ export const getSampleData = async (req: Request, res: Response) => {
 
     const response = await axios.get(`${config.HUDI_SERVICE_URL}/sample-data`, {
       params: {
-        endpoint: req.awsEndpoint
-          .replace("http://", "")
-          .replace("https://", ""),
+        endpoint: req.awsEndpoint?.trim(),
         access_key: req.awsAccessKeyId,
         secret_key: req.awsSecretAccessKey,
         bucket_name: req.awsBucketName,
@@ -95,9 +89,7 @@ export const getKeyMetrics = async (req: Request, res: Response) => {
 
     const response = await axios.get(`${config.HUDI_SERVICE_URL}/key-metrics`, {
       params: {
-        endpoint: req.awsEndpoint
-          .replace("http://", "")
-          .replace("https://", ""),
+        endpoint: req.awsEndpoint?.trim(),
         access_key: req.awsAccessKeyId,
         secret_key: req.awsSecretAccessKey,
         bucket_name: req.awsBucketName,
@@ -116,9 +108,7 @@ export const getTables = async (req: Request, res: Response) => {
   try {
     const response = await axios.get(`${config.HUDI_SERVICE_URL}/tables`, {
       params: {
-        endpoint: req.awsEndpoint
-          .replace("http://", "")
-          .replace("https://", ""),
+        endpoint: req.awsEndpoint?.trim(),
         access_key: req.awsAccessKeyId,
         secret_key: req.awsSecretAccessKey,
         bucket_name: req.awsBucketName,
@@ -142,9 +132,7 @@ export const getVersioningInfo = async (req: Request, res: Response) => {
 
     const response = await axios.get(`${config.HUDI_SERVICE_URL}/versioning`, {
       params: {
-        endpoint: req.awsEndpoint
-          .replace("http://", "")
-          .replace("https://", ""),
+        endpoint: req.awsEndpoint?.trim(),
         access_key: req.awsAccessKeyId,
         secret_key: req.awsSecretAccessKey,
         bucket_name: req.awsBucketName,
@@ -171,15 +159,13 @@ export const detectSmallFilesWarning = async (req: Request, res: Response) => {
       `${config.HUDI_SERVICE_URL}/small-files-warning`,
       {
         params: {
-          endpoint: req.awsEndpoint
-            .replace("http://", "")
-            .replace("https://", ""),
+          endpoint: req.awsEndpoint?.trim(),
           access_key: req.awsAccessKeyId,
           secret_key: req.awsSecretAccessKey,
           bucket_name: req.awsBucketName,
           hudi_table_path,
         },
-      }
+      },
     );
 
     res.json(response.data);

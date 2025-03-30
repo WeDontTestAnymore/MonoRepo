@@ -24,6 +24,8 @@ export const loggerMiddleware = pinoHttp({
     }),
     res: (res) => ({
       statusCode: res.statusCode,
+      body: res.data,
+      body2: res.body,
     }),
   },
 });

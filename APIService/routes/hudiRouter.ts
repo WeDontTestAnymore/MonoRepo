@@ -8,15 +8,16 @@ import {
   getVersioningInfo,
   detectSmallFilesWarning,
 } from "../controllers/hudiController";
+import { authMiddleware } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-router.get("/schema", getSchema);
-router.get("/partitions", getPartitions);
-router.get("/sample-data", getSampleData);
-router.get("/key-metrics", getKeyMetrics);
-router.get("/tables", getTables);
-router.get("/versioning", getVersioningInfo);
-router.get("/small-files-warning", detectSmallFilesWarning);
+router.post("/schema", authMiddleware, getSchema);
+router.post("/partitions", authMiddleware, getPartitions);
+router.post("/sample-data", authMiddleware, getSampleData);
+router.post("/key-metrics", authMiddleware, getKeyMetrics);
+router.post("/tables", authMiddleware, getTables);
+router.post("/versioning", authMiddleware, getVersioningInfo);
+router.post("/small-files-warning", authMiddleware, detectSmallFilesWarning);
 
 export default router;
