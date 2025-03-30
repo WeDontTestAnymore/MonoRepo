@@ -121,15 +121,3 @@ npm run dev
 }
 
 
-
-
-
-Replace `"your-action"` with `countRowGroups`, `countRows`, `getStats`, or `getRange` based on the request.
-
----
-
-## Configuration
-
-Replace `your-access-key`, `your-secret-key`, and `s3.your-endpoint.com` with actual credentials and endpoint.
-
-
