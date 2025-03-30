@@ -1,70 +1,105 @@
+import os
 import json
 from minio import Minio
-from urllib.parse import unquote
+from minio.error import S3Error
+import pyarrow.parquet as pq
+from io import BytesIO
 
-def get_partition_keys(endpoint: str, access_key: str, secret_key: str, bucket_name: str, hudi_table_path: str):
-    """Extracts partition keys from Hudi metadata, commit, deltacommit, and compaction files."""
+def list_hudi_partitions(endpoint, access_key, secret_key, bucket_name, hudi_table_path):
+    client = Minio(
+        endpoint.replace("https://", "").replace("http://", ""),
+        access_key=access_key,
+        secret_key=secret_key,
+        secure=endpoint.startswith("https")
+    )
+
+    partitions = {}
+    metadata_rows = {}  
+
     try:
-        secure = endpoint.startswith("https")
-        minio_client = Minio(endpoint.replace("https://", "").replace("http://", ""),
-                             access_key=access_key,
-                             secret_key=secret_key,
-                             secure=secure)
+        objects = client.list_objects(bucket_name, prefix=hudi_table_path, recursive=True)
 
-        objects = minio_client.list_objects(bucket_name, f"{hudi_table_path}/.hoodie/", recursive=True)
-        files = [obj.object_name for obj in objects]
+        for obj in objects:
+            if obj.is_dir:
+                continue  
 
-        partition_files = []
+            partition_path = os.path.dirname(obj.object_name)
+            partition_keys = partition_path.replace(hudi_table_path, "").strip("/").split("/")
+            partition_key = "/".join(partition_keys)  
 
-        commit_files = sorted([f for f in files if f.endswith(".commit")], reverse=True)
-        deltacommit_files = sorted([f for f in files if f.endswith(".deltacommit")], reverse=True)
-        compaction_files = sorted([f for f in files if f.endswith(".compaction")], reverse=True)
+            
+            if partition_path not in partitions:
+                partitions[partition_path] = {
+                    "partition": partition_path,
+                    "partitionKey": partition_key,
+                    "commitTime": "N/A",
+                    "totalSizeMB": 0,
+                    "totalRows": 0,
+                    "rowGroups": 0,
+                    "rowGroupDetails": []
+                }
 
-        if commit_files:
-            partition_files.append(commit_files[0])
-        if deltacommit_files:
-            partition_files.append(deltacommit_files[0])
-        if compaction_files:
-            partition_files.append(compaction_files[0])
+           
+            partitions[partition_path]["totalSizeMB"] += obj.size / (1024 * 1024)
 
-        metadata_files = [f for f in files if "partition_metadata" in f or f.startswith(".hoodie/metadata/")]
-        metadata_files = [f for f in metadata_files if not f.endswith(".crc")]  
+            
+            if ".hoodie/metadata/.hoodie" in obj.object_name and (obj.object_name.endswith(".commit") or obj.object_name.endswith(".deltacommit")):
+                try:
+                    metadata_obj = client.get_object(bucket_name, obj.object_name)
+                    raw_metadata = metadata_obj.read().decode("utf-8")
+                    metadata_obj.close()
+                    metadata_obj.release_conn()
 
-        if metadata_files:
-            partition_files.append(metadata_files[0])
+                    commit_data = parse_commit_file(raw_metadata)
+
+                    if commit_data:
+                        metadata_rows[partition_path] = commit_data.get("totalRows", 0)
+                        partitions[partition_path]["commitTime"] = commit_data.get("commitTime", "N/A")
+
+                except Exception:
+                    pass  
+
+            
+            if obj.object_name.endswith(".parquet"):
+                try:
+                    parquet_obj = client.get_object(bucket_name, obj.object_name)
+                    parquet_bytes = BytesIO(parquet_obj.read())
+                    parquet_file = pq.ParquetFile(parquet_bytes)
+
+                    num_row_groups = parquet_file.num_row_groups
+                    partitions[partition_path]["rowGroups"] += num_row_groups
+
+                    row_group_info = []
+                    for i in range(num_row_groups):
+                        rg_metadata = parquet_file.metadata.row_group(i)
+                        row_group_info.append({
+                            "rowGroupIndex": i,
+                            "numRows": rg_metadata.num_rows,
+                            "sizeMB": rg_metadata.total_byte_size / (1024 * 1024)
+                        })
+
+                    partitions[partition_path]["rowGroupDetails"].extend(row_group_info)
+
+                except Exception:
+                    pass  
 
         
-        if len(partition_files) < 3:
-            log_files = sorted([f for f in files if ".log." in f], reverse=True)
-            partition_files.extend(log_files[:3 - len(partition_files)])
+        for partition, data in partitions.items():
+            if partition in metadata_rows:
+                partitions[partition]["totalRows"] = metadata_rows[partition]
 
-        partitions = set()
+        return {"partitions": list(partitions.values())}
 
-        for file in partition_files:
-            try:
-                obj = minio_client.get_object(bucket_name, file)
-                data = obj.read().decode("utf-8")
-
-                
-                try:
-                    json_data = json.loads(data)
-                    if "partitionToWriteStats" in json_data:
-                        partitions.update(json_data["partitionToWriteStats"].keys())
-                except json.JSONDecodeError:
-                    
-                    lines = data.splitlines()
-                    for line in lines:
-                        if "/" in line or "=" in line:  
-                            partition_candidate = line.strip()
-                            if partition_candidate and partition_candidate != "files":  
-                                partitions.add(partition_candidate)
-
-            except Exception as e:
-                print(f"Error reading file {file}: {str(e)}")
-
-        return {
-            "partitions": list(partitions) if partitions else ["No valid partitions found"]
-        }
-
-    except Exception as e:
+    except S3Error as e:
         return {"error": str(e)}
+
+def parse_commit_file(raw_metadata):
+    
+    try:
+        commit_data = json.loads(raw_metadata)
+        return {
+            "commitTime": commit_data.get("commitTime", "N/A"),
+            "totalRows": commit_data.get("totalRecordsWritten", 0)
+        }
+    except Exception:
+        return None

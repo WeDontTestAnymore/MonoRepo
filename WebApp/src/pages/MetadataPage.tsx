@@ -5,7 +5,6 @@ import TableProperties from "@/components/Metadata/TableProperties";
 import QueryBuilder from "@/components/Metadata/QueryBuilder";
 import SchemaViewer from "@/components/Metadata/SchemaViewer";
 import Versioning from "@/components/Metadata/Versioning";
-import PartitionDetails from "@/components/Metadata/PartitionDetails";
 import KeyMetrics from "@/components/Metadata/KeyMetrics";
 import { Toaster } from "sonner";
 import { RootState } from "@/store/store";
@@ -24,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import DeltaTableSchema from "@/components/Metadata/Delta/DeltaTableSchema";
 
 const MetadataPage = () => {
   const [availableTables, setAvailableTables] = useState<string[]>([]);
@@ -32,6 +32,10 @@ const MetadataPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newPath, setNewPath] = useState("");
   const [tableType, setTableType] = useState("delta");
+
+  const tableCred = useSelector(
+    (state: RootState) => state.tableCred.tableCred
+  );
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -101,6 +105,18 @@ const MetadataPage = () => {
     }
   };
 
+  const getTableType = (selectedTable: string) => {
+    const table = tableCred?.find((t) => t.path.includes(selectedTable));
+
+    return table ? table.type : "unknown";
+  };
+
+  useEffect(() => {
+    const tableType = getTableType(selectedTable);
+    setTableType(tableType);
+  }),
+    [selectedTable];
+
   return (
     <div className="flex w-full h-screen bg-gray-100">
       <Sidebar
@@ -113,14 +129,14 @@ const MetadataPage = () => {
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <div className="flex-1 overflow-auto px-6 pb-6">
           <div className="p-4 shadow rounded bg-white">
-            {activeSection === "Schemas" && (
-              <TableSchema selectedTable={selectedTable} />
-            )}
+            {activeSection === "Schemas" &&
+              (tableType === "DELTA" ? (
+                <DeltaTableSchema selectedTable={selectedTable} />
+              ) : (
+                <TableSchema selectedTable={selectedTable} />
+              ))}
             {activeSection === "Properties" && (
               <TableProperties selectedTable={selectedTable} />
-            )}
-            {activeSection === "Partition Details" && (
-              <PartitionDetails selectedTable={selectedTable} />
             )}
             {activeSection === "Versioning & Snapshots" && (
               <Versioning selectedTable={selectedTable} />
@@ -138,33 +154,43 @@ const MetadataPage = () => {
       {/* Floating Button */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-          <Button className="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700">
+          <Button className="fixed bottom-6 right-6 bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-900">
             Discover New Path
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-md p-6">
+        <DialogContent className="max-w-md p-6 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold mb-4">Discover New Path</h2>
-          <div className="space-y-4">
-            <Input
-              placeholder="Enter path (e.g., s3://datalake/path)"
-              value={newPath}
-              onChange={(e) => setNewPath(e.target.value)}
-            />
-            <Select value={tableType} onValueChange={setTableType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select table type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="parquet">Parquet</SelectItem>
-                <SelectItem value="delta">Delta</SelectItem>
-                <SelectItem value="hudi">Hudi</SelectItem>
-                <SelectItem value="iceberg">Iceberg</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button className="w-full mt-2" onClick={handleDiscoverPath}>
-              Send
-            </Button>
+          <div className="flex space-x-4">
+            {/* Input - 3 parts */}
+            <div className="flex-[3]">
+              <Input
+                className="text-black border-gray-700 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter path (e.g., s3://datalake/path)"
+                value={newPath}
+                onChange={(e) => setNewPath(e.target.value)}
+              />
+            </div>
+            {/* Dropdown - 1 part */}
+            <div className="flex-[1]">
+              <Select value={tableType} onValueChange={setTableType}>
+                <SelectTrigger className=" text-black border-gray-700 focus:ring-blue-500 focus:border-blue-500">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white text-black border-gray-300">
+                  <SelectItem value="parquet">Parquet</SelectItem>
+                  <SelectItem value="delta">Delta</SelectItem>
+                  <SelectItem value="hudi">Hudi</SelectItem>
+                  <SelectItem value="iceberg">Iceberg</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          <Button
+            className="w-full mt-4 bg-gray-800 hover:bg-gray-900 text-white"
+            onClick={handleDiscoverPath}
+          >
+            Send
+          </Button>
         </DialogContent>
       </Dialog>
     </div>

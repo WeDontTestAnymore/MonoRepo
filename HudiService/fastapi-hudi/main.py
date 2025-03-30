@@ -1,12 +1,11 @@
 from urllib.parse import unquote
 from fastapi import FastAPI, Query
 from services.schema_service import get_table_schema
-from services.partition_service import get_partition_keys
+from services.partition_service import list_hudi_partitions
 from services.sample_data_service import get_sample_data
 from services.key_metrics_service import get_key_metrics
 from services.versioning_service import get_versioning_info
 from services.small_files_warning_service import detect_small_files
-from services.list_tables_service import list_tables
 
 app = FastAPI()
 
@@ -31,17 +30,17 @@ def schema(
 
 
 @app.get("/partitions")
-def partitions(
-    endpoint: str = Query(..., description="MinIO/S3 endpoint"),
-    access_key: str = Query(..., description="MinIO/S3 access key"),
-    secret_key: str = Query(..., description="MinIO/S3 secret key"),
-    bucket_name: str = Query(..., description="S3 Bucket name"),
-    hudi_table_path: str = Query(..., description="Hudi table path")
+def get_hudi_partitions(
+    endpoint: str = Query(..., description="S3/MinIO endpoint"),
+    access_key: str = Query(..., description="S3/MinIO access key"),
+    secret_key: str = Query(..., description="S3/MinIO secret key"),
+    bucket_name: str = Query(..., description="Bucket name"),
+    hudi_table_path: str = Query(..., description="Hudi table path"),
 ):
-    
-    return get_partition_keys(
-        unquote(endpoint), access_key, unquote(secret_key), bucket_name, unquote(hudi_table_path)
-    )
+    """
+    API endpoint to fetch Hudi partitions metadata from MinIO/S3.
+    """
+    return list_hudi_partitions(endpoint, access_key, secret_key, bucket_name, hudi_table_path)
 
 
 @app.get("/sample-data")
@@ -64,23 +63,6 @@ def key_metrics(
     hudi_table_path: str = Query(..., description="Hudi table path")
 ):
     return get_key_metrics(unquote(endpoint), unquote(access_key), unquote(secret_key), unquote(bucket_name), unquote(hudi_table_path))
-
-
-
-@app.get("/tables")
-def get_tables(
-    endpoint: str = Query(...),
-    access_key: str = Query(...),
-    secret_key: str = Query(...),
-    bucket_name: str = Query(...)
-):
-    return list_tables(
-        unquote(endpoint),
-        unquote(access_key),
-        unquote(secret_key),
-        unquote(bucket_name)
-    )
-
 
 
 @app.get("/versioning")
@@ -108,3 +90,4 @@ def small_files_warning(
     hudi_table_path: str = Query(..., description="Hudi table path"),
 ):
     return detect_small_files(unquote(endpoint), access_key, unquote(secret_key), bucket_name, hudi_table_path)
+

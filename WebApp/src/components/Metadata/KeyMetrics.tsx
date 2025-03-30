@@ -19,6 +19,9 @@ const KeyMetrics = ({ selectedTable }: KeyMetricsProps) => {
   const tableCred = useSelector(
     (state: RootState) => state.tableCred.tableCred
   );
+  const currentTable = useSelector(
+    (state: RootState) => state.delta.selectedTable
+  );
   const basePath = useSelector((state: RootState) => state.tableCred.basePath);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -26,7 +29,23 @@ const KeyMetrics = ({ selectedTable }: KeyMetricsProps) => {
   const handleDelta = async () => {
     setLoading(true);
     try {
-      if (!allCommits.length) {
+      if (allCommits.length > 0 && currentTable === selectedTable) {
+        const fileDirectory = `${basePath}${selectedTable}/_delta_log/${latestCommit}`;
+        console.log("🚀 ~ handleDelta ~ fileDirectory:", fileDirectory);
+        const latestCommitResponse = await apiClient.post("/delta/stats", {
+          fileDirectory: fileDirectory,
+        });
+        console.log(
+          "🚀 ~ handleDelta ~ latestCommitResponse:",
+          latestCommitResponse
+        );
+
+        if (latestCommitResponse.status === 200) {
+          setDataToShow(latestCommitResponse.data.schema);
+        } else {
+          toast.error("Failed to fetch latest commit schema.");
+        }
+      } else {
         const deltaDirectory = tableCred?.find(
           (t) => t.path.includes(selectedTable) // Instead of endsWith()
         );
@@ -55,6 +74,7 @@ const KeyMetrics = ({ selectedTable }: KeyMetricsProps) => {
                 ),
                 latestCommit: commitResponse.data.latestCommit.fileName,
                 oldestCommit: commitResponse.data.oldestCommit.fileName,
+                selectedTable: selectedTable,
               })
             );
 
@@ -87,22 +107,6 @@ const KeyMetrics = ({ selectedTable }: KeyMetricsProps) => {
         } catch (error) {
           toast.error("Error fetching commits");
         }
-      } else {
-        const fileDirectory = `${basePath}${selectedTable}/_delta_log/${latestCommit}`;
-        console.log("🚀 ~ handleDelta ~ fileDirectory:", fileDirectory);
-        const latestCommitResponse = await apiClient.post("/delta/stats", {
-          fileDirectory: fileDirectory,
-        });
-        console.log(
-          "🚀 ~ handleDelta ~ latestCommitResponse:",
-          latestCommitResponse
-        );
-
-        if (latestCommitResponse.status === 200) {
-          setDataToShow(latestCommitResponse.data.schema);
-        } else {
-          toast.error("Failed to fetch latest commit schema.");
-        }
       }
     } catch (error) {
       toast.error("Error fetching data");
@@ -111,7 +115,36 @@ const KeyMetrics = ({ selectedTable }: KeyMetricsProps) => {
     }
   };
 
-  const handleHudi = async () => {};
+  const handleHudi = async () => {
+    setLoading(true);
+    try {
+      console.log("🚀 ~ handleHudi ~ selectedTable:", selectedTable);
+      const hudi_table_path = selectedTable.split("/").slice(1).join("/");
+      console.log("🚀 ~ handleHudi ~ hudi_table_path:", hudi_table_path);
+
+      // const response = await apiClient.post("/hudi/key-metrics", {
+      //   hudi_table_path: hudi_table_path,
+      // });
+
+      const response = await apiClient.post("/hudi/small-files-warning", {
+        hudi_table_path: hudi_table_path,
+      });
+
+      console.log("🚀 ~ handleHudi ~ response:", response);
+
+      if (response.status === 200) {
+        console.log("🚀 ~ handleHudi ~ response.data:", response.data);
+        setDataToShow(response.data.schema);
+      } else {
+        console.error("Failed to fetch Hudi table schema.");
+      }
+    } catch (error) {
+      console.error("Error fetching Hudi table schema:", error);
+      toast.error("Error fetching Hudi table schema.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleIceberg = async () => {};
 
@@ -121,10 +154,13 @@ const KeyMetrics = ({ selectedTable }: KeyMetricsProps) => {
     if (table) {
       const { type } = table;
       if (type === "DELTA") {
+        setDataToShow(null); // Clear previous data
         handleDelta();
       } else if (type === "HUDI") {
+        setDataToShow(null);
         handleHudi();
       } else if (type === "ICEBERG") {
+        setDataToShow(null);
         handleIceberg();
       }
     }
@@ -136,7 +172,7 @@ const KeyMetrics = ({ selectedTable }: KeyMetricsProps) => {
 
   return (
     <div>
-      <h2>Table Schema: {selectedTable}</h2>
+      <h2>Key Metrics: {selectedTable}</h2>
       {dataToShow}
     </div>
   );

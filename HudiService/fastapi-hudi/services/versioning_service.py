@@ -1,66 +1,98 @@
 import json
-from minio import Minio
-from urllib.parse import unquote
+import boto3
+import io
+import fastavro
+from botocore.exceptions import BotoCoreError, ClientError
+from datetime import datetime
 
-def list_timeline_files(minio_client, bucket_name, hudi_table_path):
-    """
-    Lists commit & deltacommit files from:
-    1. `.hoodie/`
-    2. `.hoodie/metadata/.hoodie/`
-    """
+VALID_VERSIONING_TYPES = [".commit", ".deltacommit"]
+
+def get_s3_client(endpoint, access_key, secret_key):
+    return boto3.client(
+        "s3",
+        endpoint_url=endpoint,
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key
+    )
+
+def list_versioning_files(s3_client, bucket_name, hudi_table_path):
+    prefix = f"{hudi_table_path.strip('/')}/.hoodie/"
+
     try:
-        locations = [f"{hudi_table_path}/.hoodie/", f"{hudi_table_path}/.hoodie/metadata/.hoodie/"]
-        timeline_files = []
+        response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+        files = [
+            {
+                "file_name": obj["Key"],
+                "last_modified": obj["LastModified"].isoformat(),
+                "size_MB": round(obj["Size"] / (1024 * 1024), 2)
+            }
+            for obj in response.get("Contents", [])
+            if obj["Key"].endswith(tuple(VALID_VERSIONING_TYPES))
+        ]
+        return sorted(files, key=lambda x: x["last_modified"], reverse=True)
 
-        for path in locations:
-            objects = minio_client.list_objects(bucket_name, prefix=path, recursive=True)
-            all_files = [obj.object_name for obj in objects]
+    except (BotoCoreError, ClientError) as e:
+        return {"error": f"Failed to list versioning files: {str(e)}"}
 
-            
-            timeline_files.extend([f for f in all_files if f.endswith(".commit") or f.endswith(".deltacommit")])
-
-        return sorted(timeline_files)  
-    except Exception as e:
-        return {"error": unquote(str(e))}
-
-def parse_commit_file(minio_client, bucket_name, commit_file):
-    """Reads and extracts metadata from a commit/deltacommit file."""
+def extract_versioning_info(s3_client, bucket_name, file_data):
+    file_key = file_data["file_name"]
+    
     try:
-        obj = minio_client.get_object(bucket_name, commit_file)
-        commit_content = obj.read().decode("utf-8")
+        response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        avro_file = io.BytesIO(response["Body"].read())
+        reader = fastavro.reader(avro_file)
+
+        commit_data = [record for record in reader]
+        if not commit_data:
+            return {"error": f"No data found in {file_key}"}
+
+        metadata = commit_data[0]  
+
+        timestamp = metadata.get("timestamp", None)
+        formatted_time = (
+            datetime.utcfromtimestamp(timestamp / 1000).isoformat()
+            if timestamp else None
+        )
+
+        version_info = {
+            "file_name": file_key,
+            "file_type": "commit" if file_key.endswith(".commit") else "deltacommit",
+            "total_files": len(metadata.get("addedFiles", [])) + len(metadata.get("removedFiles", [])),
+            "added_files": metadata.get("addedFiles", []),
+            "removed_files": metadata.get("removedFiles", []),
+            "last_modified": file_data["last_modified"],
+            "file_size_MB": file_data["size_MB"]
+        }
 
         
-        commit_data = json.loads(commit_content)
+        if formatted_time and formatted_time != file_data["last_modified"]:
+            version_info["timestamp"] = formatted_time
 
-        return {
-            "commit_file": unquote(commit_file),
-            "timestamp": unquote(str(commit_data.get("timestamp"))),
-            "operation": unquote(commit_data.get("operation", "Unknown")),
-            "total_records": unquote(str(commit_data.get("totalRecordsUpdated", "Unknown"))),
-        }
+        return version_info
+
     except Exception as e:
-        return None  
+        return {"error": f"Failed to parse {file_key}: {str(e)}"}
 
 def get_versioning_info(endpoint, access_key, secret_key, bucket_name, hudi_table_path):
-    """
-    Fetches versioning info from Hudi timeline (commit files).
-    """
     try:
-        secure = endpoint.startswith("https")
-        minio_client = Minio(unquote(endpoint.replace("https://", "").replace("http://", "")),
-                             access_key=unquote(access_key),
-                             secret_key=unquote(secret_key),
-                             secure=secure)
-
+        s3_client = get_s3_client(endpoint, access_key, secret_key)
         
-        timeline_files = list_timeline_files(minio_client, unquote(bucket_name), unquote(hudi_table_path))
-        if not timeline_files or isinstance(timeline_files, dict):  
-            return {"error": unquote("No commit/deltacommit files found")}
+        versioning_files = list_versioning_files(s3_client, bucket_name, hudi_table_path)
+        if isinstance(versioning_files, dict) and "error" in versioning_files:
+            return versioning_files  
+        if not versioning_files:
+            return {"error": "No versioning history found in .hoodie metadata"}
 
-        
-        version_history = [parse_commit_file(minio_client, unquote(bucket_name), file) for file in timeline_files]
-        version_history = [v for v in version_history if v]  
+        version_history = [
+            extract_versioning_info(s3_client, bucket_name, file)
+            for file in versioning_files
+        ]
 
-        return {"versioning_info": version_history}
+        return {
+            "valid_versioning_types": VALID_VERSIONING_TYPES,
+            "total_versions": len(version_history),
+            "versioning_history": version_history
+        }
+
     except Exception as e:
-        return {"error": unquote(str(e))}
+        return {"error": f"Failed to retrieve versioning info: {str(e)}"}
