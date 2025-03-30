@@ -20,17 +20,6 @@ interface ISchemaRequest {
   fileDirectory: string;
 }
 
-// export const meta = async (req: Request, res: Response) => {
-//   const result = await connection.run(`
-// SELECT *
-// FROM 's3://datalake/delta/users/_delta_log/00000000000000000000.json'
-//     `);
-
-//   console.log(await result.getColumnsJson());
-//   res.sendStatus(200);
-// };
-//
-
 interface ColumnMetadata {
   name: string;
   type: string;
@@ -72,6 +61,8 @@ export const getCommits = async (req: Request, res: Response) => {
     });
 
     const response = await s3Client.send(command);
+    console.log(response.Contents);
+
     const commits =
       response.Contents?.filter((obj) => obj.Key?.endsWith(".json"))
         .map((obj) => {
@@ -86,7 +77,6 @@ export const getCommits = async (req: Request, res: Response) => {
           };
         })
         .sort((a, b) => (b.version || 0) - (a.version || 0)) || [];
-
     res.json({
       success: true,
       commits,
@@ -113,26 +103,32 @@ export const getStats = async (req: Request, res: Response) => {
   try {
     const body = req.body as ISchemaRequest;
     await connection.run(`
-        CREATE OR REPLACE SECRET secret (
-            TYPE s3,
-            KEY_ID '${body.accessKey}',
-            SECRET '${body.secretKey}',
-            REGION '${body.region}',
-            ENDPOINT '${body.endpoint}',
-            URL_STYLE '${body.urlStyle}'
-        )`);
+      CREATE OR REPLACE SECRET secret (
+        TYPE s3,
+        KEY_ID '${body.accessKey}',
+        SECRET '${body.secretKey}',
+        REGION '${body.region}',
+        ENDPOINT '${body.endpoint}',
+        URL_STYLE '${body.urlStyle}'
+      )`);
 
     const result = await connection.run(`
-        SELECT * FROM '${body.fileDirectory}';
+      SELECT * FROM '${body.fileDirectory}';
     `);
 
-    const cols = await result.getColumnsJson();
+    const cols: any[][] = await result.getColumnsJson();
     console.log(cols);
-    /**
-     * @todo fix ts here
-     */
-    const stats = cols[2][2].stats;
+    if (
+      !cols[2] ||
+      cols[2].length < 3 ||
+      !cols[2][2] ||
+      cols[2][2].stats === undefined
+    ) {
+      res.status(200).send("No data found");
+      return;
+    }
 
+    const stats = cols[2][2].stats;
     res.send({ stats });
   } catch (err) {
     console.error(err);

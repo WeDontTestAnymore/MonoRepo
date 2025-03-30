@@ -82,6 +82,16 @@ services:
     networks:
       - hackathon
 
+  frontend:
+    image: ghcr.io/wedonttestanymore/webapp
+    container_name: webapp
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+    networks:
+      - hackathon
 volumes:
   postgresdb:
 #  minio_data:

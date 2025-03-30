@@ -38,7 +38,7 @@ export const getSchema = async (req: Request, res: Response) => {
       },
     );
     logger.info(`RESPONSE: ${JSON.stringify(response.data)}`);
-    res.status(response.status).json(response.data.data);
+    res.status(response.status).json(response.data);
     return;
   } catch (err) {
     logger.error("Error in getSchema of ParquetController:", err);
@@ -91,7 +91,7 @@ export const getStats = async (req: Request, res: Response) => {
         parquetPath,
       },
     );
-    res.status(response.status).json(response.data.data);
+    res.status(response.status).json(response.data);
     return;
   } catch (err) {
     logger.error(err);

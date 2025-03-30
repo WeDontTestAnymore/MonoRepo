@@ -40,6 +40,7 @@ export const BucketScanner = async (req: Request, res: Response) => {
 
     const tables = await scanBucket(s3Client, config);
     res.json({ tables });
+    return;
   } catch (err) {
     console.log(err);
     res.status(500).send({ message: "Internal Server Error" });

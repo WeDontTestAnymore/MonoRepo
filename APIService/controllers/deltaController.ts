@@ -10,26 +10,23 @@ export const getCommits = async (req: Request, res: Response) => {
       res.status(400).send({ message: "deltaDirectory is required" });
       return;
     }
-    const response = await axios.post(`${config.DELTA_SERVICE_URL}/commits`, {
+    const response = await axios.post(`${config.}/commits`, {
       accessKey: req.awsAccessKeyId,
       secretKey: req.awsSecretAccessKey,
       region: req.awsRegion,
       endpoint: req.awsEndpoint
-        ?.replace("http://", "")
+        .replace("http://", "")
         .replace("https://", "")
         .trim(),
       urlStyle: "path",
       deltaDirectory,
     });
-
     res.json(response.data);
   } catch (err) {
     logger.error(err);
     res.status(500).send({ message: "Internal Server Error" });
     return;
   }
-
-  res.sendStatus(200);
 };
 
 export const getSchema = async (req: Request, res: Response) => {
@@ -44,7 +41,7 @@ export const getSchema = async (req: Request, res: Response) => {
       secretKey: req.awsSecretAccessKey,
       region: req.awsRegion,
       endpoint: req.awsEndpoint
-        ?.replace("http://", "")
+        .replace("http://", "")
         .replace("https://", "")
         .trim(),
       urlStyle: "path",
@@ -62,7 +59,7 @@ export const getStats = async (req: Request, res: Response) => {
   try {
     const fileDirectory = req.body.fileDirectory;
     if (!fileDirectory) {
-      res.status(400).send({ message: "deltaDirectory is required" });
+      res.status(400).send({ message: "fileDirectory is required" });
       return;
     }
     const response = await axios.post(`${config.DELTA_SERVICE_URL}/stats`, {
@@ -70,7 +67,7 @@ export const getStats = async (req: Request, res: Response) => {
       secretKey: req.awsSecretAccessKey,
       region: req.awsRegion,
       endpoint: req.awsEndpoint
-        ?.replace("http://", "")
+        .replace("http://", "")
         .replace("https://", "")
         .trim(),
       urlStyle: "path",
@@ -82,5 +79,4 @@ export const getStats = async (req: Request, res: Response) => {
     res.status(500).send({ message: "Internal Server Error" });
     return;
   }
-  res.sendStatus(200);
 };

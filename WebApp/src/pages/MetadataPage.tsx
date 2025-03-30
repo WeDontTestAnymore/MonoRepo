@@ -25,6 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import DeltaTableSchema from "@/components/Metadata/Delta/DeltaTableSchema";
+import DeltaKeyMetrics from "@/components/Metadata/Delta/DeltaKeyMetrics";
+import DeltaVersioning from "@/components/Metadata/Delta/DeltaVersioning";
 import HudiTableSchema from "@/components/Metadata/Hudi/HudiTableSchema";
 import HudiTableProperties from "@/components/Metadata/Hudi/HudiTableProperties";
 import HudiVersioning from "@/components/Metadata/Hudi/HudiVersioning";
@@ -166,7 +168,7 @@ const MetadataPage = () => {
               ))}
             {activeSection === "Versioning & Snapshots" &&
               (tableType === "DELTA" ? (
-                <DeltaTableSchema selectedTable={selectedTable} />
+                <DeltaVersioning selectedTable={selectedTable} />
               ) : tableType === "HOODIE" ? (
                 <HudiVersioning selectedTable={selectedTable} />
               ) : (
@@ -174,7 +176,7 @@ const MetadataPage = () => {
               ))}
             {activeSection === "Key Metrics" &&
               (tableType === "DELTA" ? (
-                <DeltaTableSchema selectedTable={selectedTable} />
+                <DeltaKeyMetrics selectedTable={selectedTable} />
               ) : tableType === "HOODIE" ? (
                 <HudiKeyMetrics selectedTable={selectedTable} />
               ) : (
