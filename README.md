@@ -4,7 +4,7 @@ A web based Meta store viewer, which can access and analyse huge metadata from P
 Users can just enter a s3 location and its details and get access to Metalens with a click
 
 
-To run all the services : 
+To run all the services :
 
 ```bash
 docker compose up
@@ -21,3 +21,11 @@ Tech stack : Docker,Python,FastAPI, Node,Express,PostGres and Node
 OpenSource libraries : aws sdk for js and boto3  for python, DuckDB js package, Shadcn and MagicUI for UI,axios,pyarrow, FastAvro,PySpark
 
 Refer to individual service directories for corresponding microservice documentation
+
+### For OpenAPI Doc
+
+```
+1.npm install -g swagger-ui-watcher
+2.swagger-ui-watcher openapi.yaml
+3.redocly preview-docs openapi.yaml
+```

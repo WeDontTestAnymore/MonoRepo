@@ -1,0 +1,308 @@
+openapi: 3.0.3
+info:
+  title: Metastore Viewer API
+  description: API for retrieving metadata from Hudi, Delta, Iceberg, and Parquet tables stored in S3/MinIO.
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local development server
+  - url: https://api.yourdomain.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      summary: Authenticate and register session
+      description: Logs in and registers a session with the backend.
+      operationId: authLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bucket_name:
+                  type: string
+                bucket_region:
+                  type: string
+                bucket_type:
+                  type: string
+                bucket_uri:
+                  type: string
+                bucket_access_key_id:
+                  type: string
+                bucket_secret_access_key:
+                  type: string
+      responses:
+        "200":
+          description: Login successful
+        "400":
+          description: Invalid request
+
+  /bucket/scan:
+    post:
+      summary: Scan the bucket for tables
+      description: Retrieves a list of tables from the specified bucket.
+      operationId: scanBucket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                maxDepth:
+                  type: integer
+      responses:
+        "200":
+          description: List of detected tables
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tables:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        path:
+                          type: string
+        "400":
+          description: Invalid request
+
+  /delta/commits:
+    post:
+      summary: Retrieve Delta commit file paths
+      operationId: getDeltaCommits
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeltaRequest"
+      responses:
+        "200":
+          description: List of Delta commit files
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeltaCommits"
+        "400":
+          description: Invalid request
+
+  /delta/schema:
+    post:
+      summary: Get Delta table schema at a commit
+      operationId: getDeltaSchema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeltaSchemaRequest"
+      responses:
+        "200":
+          description: Table schema
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schema:
+                    type: string
+        "400":
+          description: Invalid request
+
+  /delta/stats:
+    post:
+      summary: Get Delta table statistics
+      operationId: getDeltaStats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeltaSchemaRequest"
+      responses:
+        "200":
+          description: Table statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stats:
+                    type: string
+        "400":
+          description: Invalid request
+
+  /hudi/versioning:
+    get:
+      summary: Retrieve Hudi table versioning information
+      operationId: getHudiVersioning
+      parameters:
+        - $ref: "#/components/parameters/HudiQueryParams"
+      responses:
+        "200":
+          description: Versioning details of the Hudi table
+        "400":
+          description: Invalid request
+
+  /hudi/schema:
+    get:
+      summary: Retrieve Hudi table schema
+      operationId: getHudiSchema
+      parameters:
+        - $ref: "#/components/parameters/HudiQueryParams"
+      responses:
+        "200":
+          description: Schema of the Hudi table
+        "400":
+          description: Invalid request
+
+  /hudi/partitions:
+    get:
+      summary: Retrieve Hudi table partition details
+      operationId: getHudiPartitions
+      parameters:
+        - $ref: "#/components/parameters/HudiQueryParams"
+      responses:
+        "200":
+          description: Partition details
+        "400":
+          description: Invalid request
+
+  /hudi/sample-data:
+    get:
+      summary: Retrieve sample data from a Hudi table
+      operationId: getHudiSampleData
+      parameters:
+        - $ref: "#/components/parameters/HudiQueryParams"
+      responses:
+        "200":
+          description: Sample data from the Hudi table
+        "400":
+          description: Invalid request
+
+  /hudi/key-metrics:
+    get:
+      summary: Retrieve key metrics of a Hudi table
+      operationId: getHudiKeyMetrics
+      parameters:
+        - $ref: "#/components/parameters/HudiQueryParams"
+      responses:
+        "200":
+          description: Key metrics of the Hudi table
+        "400":
+          description: Invalid request
+
+  /hudi/small-files-warning:
+    get:
+      summary: Retrieve small files warning for a Hudi table
+      operationId: getHudiSmallFilesWarning
+      parameters:
+        - $ref: "#/components/parameters/HudiQueryParams"
+      responses:
+        "200":
+          description: Small file warnings
+        "400":
+          description: Invalid request
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DeltaRequest:
+      type: object
+      properties:
+        accessKey:
+          type: string
+        secretKey:
+          type: string
+        region:
+          type: string
+        endpoint:
+          type: string
+        urlStyle:
+          type: string
+        deltaDirectory:
+          type: string
+
+    DeltaCommits:
+      type: object
+      properties:
+        success:
+          type: boolean
+        commits:
+          type: array
+          items:
+            type: object
+            properties:
+              fileName:
+                type: string
+              version:
+                type: integer
+              size:
+                type: integer
+              lastModified:
+                type: string
+              path:
+                type: string
+        totalCommits:
+          type: integer
+        latestCommit:
+          type: object
+        oldestCommit:
+          type: object
+        metadata:
+          type: object
+
+    DeltaSchemaRequest:
+      type: object
+      properties:
+        accessKey:
+          type: string
+        secretKey:
+          type: string
+        region:
+          type: string
+        endpoint:
+          type: string
+        urlStyle:
+          type: string
+        fileDirectory:
+          type: string
+
+  parameters:
+    HudiQueryParams:
+      name: queryParams
+      in: query
+      required: true
+      schema:
+        type: object
+        properties:
+          endpoint:
+            type: string
+          access_key:
+            type: string
+          secret_key:
+            type: string
+          bucket_name:
+            type: string
+          hudi_table_path:
+            type: string
