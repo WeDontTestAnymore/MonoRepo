@@ -45,15 +45,13 @@ const getDetails = async (req, res) => {
 
     } catch (error) {
         console.log("error in getDetails func: ", error.message);
+        
     }
 
 }
 
 
-
-
 router.get("/details", getDetails);
-
 
 
 
