@@ -34,10 +34,13 @@ export const latestMetadata = async (config, s3tableuri) => {
         console.log(`Initialized DuckDB S3 with key: ${config.key}, secret: ${config.secret}, region: ${config.region}`);
 
 
-      
+        const versionHintLocation = `${s3tableuri}/metadata`;
+        console.log("versionhintlocation is", versionHintLocation);
+       
 
-        const latestVersionQuery = ``;
-
+        const latestVersionQuery = `
+        select * from read_json('s3://datalake/iceberg_region-0d2548587f124b899a7392a542d61afb/metadata/00012-add26b8a-9e09-4d53-85a8-4250a5c64ee4.metadata.json');
+        `
         console.log("query is: ",latestVersionQuery);
         await connection.run(latestVersionQuery);
 
@@ -45,14 +48,16 @@ export const latestMetadata = async (config, s3tableuri) => {
 
         const res = jsonFileResult.getRowObjectsJson();
 
-        const latestMetadataFile = res[0];
-
+        const latestMetadataFile  = res[0];
+        //console.log(latestMetadataFile)
        return latestMetadataFile
 
     } catch (error) {
         console.log("Error in latestMetadata function :", error.message);
         return;
     }
+
+
 
 
 };
@@ -66,4 +71,4 @@ const config = {
 
 const tables3uri = "s3://iceberg-test/employment_data";
 
-//latestMetadata(config, tables3uri);
+// latestMetadata(config, tables3uri);
