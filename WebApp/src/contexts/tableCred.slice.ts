@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-enum TableTypes {
+export enum TableTypes {
   DELTA = "DELTA",
   ICEBERG = "ICEBERG",
   HUDI = "HUDI",
