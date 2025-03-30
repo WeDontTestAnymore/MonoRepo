@@ -7,6 +7,5 @@ const router = express.Router();
 
 router.get("/show",getProperties);
 router.get("/manifestFiles",getManifestFiles);
-router.get("/partitionDetails",getPartitionDetails);
 
 export default router   

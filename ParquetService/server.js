@@ -8,7 +8,6 @@ const PORT = process.env.PORT || 3004;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Schema Route
 app.post("/schema/show", async (req, res) => {
   const instance = await DuckDBInstance.create(":memory:");
   const connection = await instance.connect();
@@ -48,7 +47,6 @@ app.post("/schema/show", async (req, res) => {
   }
 });
 
-// Row Group Stats Route
 app.post("/row-groups-stats/parquet", async (req, res) => {
   try {
     const { config, parquetPath } = req.body;

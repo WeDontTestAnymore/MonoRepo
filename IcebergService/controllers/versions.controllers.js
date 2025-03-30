@@ -1,6 +1,6 @@
 import { DuckDBInstance } from '@duckdb/node-api';
 
-const findAllVersions = async (config, tables3uri) => {
+const findAllVersions = async (config, icebergPath) => {
     const instance = await DuckDBInstance.create(':memory:');
     const connection = await instance.connect();
 
@@ -35,7 +35,7 @@ const findAllVersions = async (config, tables3uri) => {
     try {
         const query = `
             SELECT *
-            FROM read_json_auto('${tables3uri}/metadata/*.json') AS t(json_column);
+            FROM read_json_auto('${icebergPath}/metadata/*.json') AS t(json_column);
         `;
         const result = await connection.runAndReadAll(query);
         const rows = result.getRowObjectsJson();
@@ -69,10 +69,10 @@ const findAllVersions = async (config, tables3uri) => {
 
 
 export const getAllVersions = async (req, res) => {
-    const { config, tables3uri } = req.body;
+    const { config, icebergPath } = req.body;
     console.log(config);
     try {
-        const allVersionSchemas = await findAllVersions(config, tables3uri);
+        const allVersionSchemas = await findAllVersions(config, icebergPath);
         console.log("schemas: ",allVersionSchemas);
         return res.status(200).json({ allVersionSchemas: allVersionSchemas });
     } catch (error) {
@@ -92,6 +92,6 @@ const config = {
     region: "us-east-1"
 };
 
-const tables3uri = "s3://iceberg-test/employment_data";
+const icebergPath = "s3://iceberg-test/employment_data";
 
-//findAllVersions(config, tables3uri);
+//findAllVersions(config, icebergPath);

@@ -6,15 +6,15 @@ const router = express.Router();
 
 // icebergPath refers to the uri of the s3 table
 const getDetails = async (req, res) => {
-    const {config,icebergPath} = req.body;
+    const { config, icebergPath } = req.body;
     if (!config.key) {
-        return console.error("s3 key not provided");
+        return res.status(400).json({ error: "s3 key not provided" });
     }
     if (!config.secret) {
-        return console.error("s3 secret not provided");
+        return res.status(400).json({ error: "s3 secret not provided" });
     }
     if (!config.endpoint) {
-        return console.error("s3 endpoint not provided");
+        return res.status(400).json({ error: "s3 endpoint not provided" });
     }
 
     // for MinIO
@@ -23,7 +23,7 @@ const getDetails = async (req, res) => {
     }
 
     if (!icebergPath) {
-        return console.error("s3 details not provided");
+        return res.status(400).json({ error: "icebergPath not provided in request" });
     }
 
     try {
@@ -41,23 +41,17 @@ const getDetails = async (req, res) => {
         const sampleData = Array.from({ length: 3 }, () =>
             Object.fromEntries(schemaFields.map(field => [field.columnName, randGen(field.dataType)]))
         );
-        return res.status(200).json({partitions,primaryKey,schemaFields,sampleData});
+        return res.status(200).json({ partitions, primaryKey, schemaFields, sampleData });
 
     } catch (error) {
         console.log("error in getDetails func: ", error.message);
+
     }
 
 }
 
 
-
-
 router.get("/details", getDetails);
-
-
-
-
-
 
 
 export default router
