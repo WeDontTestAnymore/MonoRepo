@@ -13,4 +13,11 @@ docker compose up
 Default Frontend port : 5173
 Default Backend port : 3000
 
+The main API backend service explores the object store, identifies table formats and manages requests and responses from and to the indiividual table microservices.
+Since everything is containerised, it allows us to scale indepedent services independently.
+
+Tech stack : Docker,Python,FastAPI, Node,Express,PostGres and Node
+
+OpenSource libraries : aws sdk for js and boto3  for python, DuckDB js package, Shadcn and MagicUI for UI,axios,pyarrow, FastAvro,PySpark
+
 Refer to individual service directories for corresponding microservice documentation
