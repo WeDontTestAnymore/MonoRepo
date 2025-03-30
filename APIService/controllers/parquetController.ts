@@ -29,13 +29,16 @@ export const getSchema = async (req: Request, res: Response) => {
           access_key: req.awsAccessKeyId,
           secret_key: req.awsSecretAccessKey,
           region: req.awsRegion,
-          endpoint: endpoint,
+          endpoint: endpoint
+            .replace("http://", "")
+            .replace("https://", "")
+            .trim(),
         },
         parquetPath,
       },
     );
     logger.info(`RESPONSE: ${JSON.stringify(response.data)}`);
-    res.status(response.status).json(response.data);
+    res.status(response.status).json(response.data.data);
     return;
   } catch (err) {
     logger.error("Error in getSchema of ParquetController:", err);
@@ -88,7 +91,7 @@ export const getStats = async (req: Request, res: Response) => {
         parquetPath,
       },
     );
-    res.status(response.status).json(response.data);
+    res.status(response.status).json(response.data.data);
     return;
   } catch (err) {
     logger.error(err);
