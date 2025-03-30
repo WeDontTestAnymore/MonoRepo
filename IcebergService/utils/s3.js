@@ -11,5 +11,5 @@ export const s3setup = (config)=>{
         credentials: credentials,
         forcePathStyle:true || null
     })
-    return s3;
+    return s3
 }
