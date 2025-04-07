@@ -24,7 +24,9 @@ export const Login = async (req: Request, res: Response) => {
     console.log(`BODY` + req.body);
     const body = req.body as ILogin;
 
-    const bucket_uri = body.bucket_uri || bucketDefaults[body.bucket_type].uri;
+    const bucket_uri = body.bucket_type === BucketType.AWS 
+      ? `s3-${body.bucket_region}.amazonaws.com` 
+      : (body.bucket_uri || bucketDefaults[body.bucket_type].uri);
 
     const session_id = uuidv4();
 

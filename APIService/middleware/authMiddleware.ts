@@ -28,6 +28,7 @@ export const authMiddleware = async (
   try {
     const sessionId = req.cookies?.session_id;
 
+    logger.info("HERE");
     if (!sessionId) {
       res.status(401).send({ message: "No session cookie found" });
       return;
@@ -51,9 +52,11 @@ export const authMiddleware = async (
     req.awsRegion = session.bucket_region;
     req.bucketType = session.bucket_type as BucketType;
 
+    logger.info("Session found Successfully");
     next();
   } catch (err) {
     if (config.LOGGING === 1) {
+      logger.info("Error in authMiddleware");
       logger.error(err);
     }
     res.status(500).send({ message: "Internal Server Error" });

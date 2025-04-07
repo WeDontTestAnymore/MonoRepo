@@ -20,10 +20,12 @@ const bucketValidator : RequestHandler = async (req: Request, res: Response, nex
     } = req.body;
 
     let s3Client: S3Client;
+    let endpoint: string;
 
     if (bucket_type === BucketType.Other) {
+      endpoint = bucket_uri;
       s3Client = new S3Client({
-        endpoint: bucket_uri,
+        endpoint,
         region: bucket_region,
         credentials: {
           accessKeyId: bucket_access_key_id,
@@ -31,10 +33,21 @@ const bucketValidator : RequestHandler = async (req: Request, res: Response, nex
         },
         forcePathStyle: true, 
       });
-    } else {
-      const endpoint = `https://${bucketDefaults[bucket_type as BucketType].uri}`;
+    } else if (bucket_type === BucketType.AWS) {
+      endpoint = `https://s3-${bucket_region}.amazonaws.com`;
       s3Client = new S3Client({
-        endpoint: endpoint,
+        endpoint,
+        region: bucket_region,
+        credentials: {
+          accessKeyId: bucket_access_key_id,
+          secretAccessKey: bucket_secret_access_key,
+        },
+        forcePathStyle: false,
+      });
+    } else {
+      endpoint = `https://${bucketDefaults[bucket_type as BucketType].uri}`;
+      s3Client = new S3Client({
+        endpoint,
         region: bucket_region,
         credentials: {
           accessKeyId: bucket_access_key_id,
@@ -57,7 +70,6 @@ const bucketValidator : RequestHandler = async (req: Request, res: Response, nex
     if(config.LOGGING === 1){
       logger.error(error);
     }
-    //console.error('Bucket validation failed:', error);
     
     if (error.name === 'AccessDeniedException' || error.name === 'InvalidAccessKeyId') {
       res.status(401).json({ 

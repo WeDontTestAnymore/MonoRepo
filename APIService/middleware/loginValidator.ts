@@ -3,12 +3,12 @@ import type { Request, Response, NextFunction, RequestHandler } from "express";
 import { BucketType } from "../utils/buckets";
 
 /**
- * Zod schema for login body
+ * Updated schema: bucket_uri is optional and only when bucket_type is Other it must be a valid URL
  */
 const loginSchema = z
   .object({
     bucket_type: z.nativeEnum(BucketType),
-    bucket_uri: z.string().url().optional(),
+    bucket_uri: z.string().optional(), // removed .url() to allow computed AWS endpoints
     bucket_name: z.string().min(1),
     bucket_region: z.string().min(1),
     bucket_access_key_id: z.string().min(1),
@@ -17,12 +17,13 @@ const loginSchema = z
   .refine(
     (data) => {
       if (data.bucket_type === BucketType.Other) {
-        return !!data.bucket_uri;
+        return !!data.bucket_uri &&
+          (data.bucket_uri.startsWith("http://") || data.bucket_uri.startsWith("https://"));
       }
       return true;
     },
     {
-      message: "bucket_uri is required when bucket_type is Other",
+      message: "bucket_uri is required and must be a valid URL when bucket_type is Other",
       path: ["bucket_uri"],
     },
   );
