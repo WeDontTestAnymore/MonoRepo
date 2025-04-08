@@ -34,6 +34,17 @@ export const getDetails = async (req, res) => {
     );`)
         console.log(`Initialized DuckDB S3 with key: ${config.key}, secret: ${config.secret}, region: ${config.region}`);
 
+        const result = await connection.runAndReadAll(`
+         SELECT schemas, "partition-specs" as partitions
+              FROM read_json('${icebergPath}/metadata/*.json') ORDER BY location desc limit 1;
+                `);
+        const queryRes = result.getRowObjectsJson();
+        console.log(queryRes);
+        const { schemas, partitions } = queryRes[0];
+        const schemaFields = schemas[0].fields;
+        const partitionFields = partitions[0].fields;
+        return res.status(200).json({ schema: schemaFields, partitionDetails: partitionFields });
+
     } catch (error) {
         console.log("error in getDetails func: ", error.message);
         return res.status(500).json({ error: "Internal Server Error" });

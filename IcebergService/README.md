@@ -31,7 +31,48 @@ IcebergService/
 
 ### Schema Operations
 
-- `POST /api/schema` 
+- `POST /api/schema/details` 
+
+example
+
+```json
+{
+  "config": {
+    "key": "minio",
+    "secret": "minio123",
+    "endpoint": "127.0.0.1:9000"
+  },
+  "icebergPath": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568"
+}
+```
+
+```json
+{
+  "schema": [
+    {
+      "id": "1",
+      "name": "c_custkey",
+      "required": false,
+      "type": "long"
+    },
+    {
+      "id": "2",
+      "name": "c_name",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "partitionDetails": [
+    {
+      "name": "c_nationkey",
+      "transform": "identity",
+      "source-id": "4",
+      "field-id": "1000"
+    }
+  ]
+}
+```
+
 
 - `POST /api/schema/sampleData`
 
