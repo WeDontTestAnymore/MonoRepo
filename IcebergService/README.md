@@ -47,7 +47,33 @@ IcebergService/
 
 ### Snapshot Operations
 
-- `GET /api/snapshots` - Get table snapshots
+- `POST /api/snapshots/show` - Get table snapshots
+
+example
+
+```json
+{
+  "config": {
+    "key": "minio",
+    "secret": "minio123",
+    "endpoint": "127.0.0.1:9000"
+  },
+  "icebergPath": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568"
+}
+```
+
+```json
+{
+  "snapshots": [
+    {
+      "sequence_number": "1",
+      "snapshot_id": "7539855243087200788",
+      "timestamp_ms": "2025-04-08 13:08:21.766",
+      "manifest_list": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568/metadata/snap-7539855243087200788-1-549de57f-61cb-43dd-bd56-233a30e6e73c.avro"
+    }
+  ]
+}
+```
 
 ## Example Requests
 
@@ -74,15 +100,13 @@ GET /api/properties?tableLocation=s3://path/to/iceberg/table
 ```json
 {
   "schema": [
-    {"name": "userid", "type": "string", "required": false},
-    {"name": "salary", "type": "int", "required": false},
-    {"name": "organization", "type": "string", "required": false},
-    {"name": "yearsOfExperience", "type": "int", "required": false},
-    {"name": "joinedAt", "type": "timestamp", "required": false}
+    { "name": "userid", "type": "string", "required": false },
+    { "name": "salary", "type": "int", "required": false },
+    { "name": "organization", "type": "string", "required": false },
+    { "name": "yearsOfExperience", "type": "int", "required": false },
+    { "name": "joinedAt", "type": "timestamp", "required": false }
   ],
-  "partitionSpec": [
-    {"name": "organization", "transform": "identity"}
-  ],
+  "partitionSpec": [{ "name": "organization", "transform": "identity" }],
   "sortOrder": [],
   "schemaId": 0,
   "formatVersion": 2
@@ -92,16 +116,19 @@ GET /api/properties?tableLocation=s3://path/to/iceberg/table
 ## Setup
 
 1. Install dependencies:
+
    ```
    npm install
    ```
 
 2. Start the service:
+
    ```
    npm start
    ```
 
    For development with auto-restart:
+
    ```
    npm run dev
    ```
