@@ -4,8 +4,7 @@ import { getFileData,getOverhead,getTotalFileSize } from "../controllers/keyMetr
 
 const router = express.Router()
 router.post("/totalSize",getTotalFileSize);
-
-router.post("/overhead",getOverhead);
 router.post("/fileData",getFileData);
+router.post("/overhead",getOverhead);
 
 export default router
