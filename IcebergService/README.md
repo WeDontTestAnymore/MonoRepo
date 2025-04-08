@@ -39,7 +39,63 @@ IcebergService/
 
 ### Version Operations
 
-- `GET /api/versions` - Get table version history
+- `POST /api/versions/all` - Get table version history
+
+example
+
+```json
+{
+  "config": {
+    "key": "minio",
+    "secret": "minio123",
+    "endpoint": "127.0.0.1:9000"
+  },
+  "icebergPath": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568"
+}
+```
+
+```json
+{
+  "allVersionSchemas": [
+    [
+      {
+        "id": "1",
+        "name": "c_custkey",
+        "required": false,
+        "type": "long"
+      },
+      {
+        "id": "2",
+        "name": "c_name",
+        "required": false,
+        "type": "string"
+      }
+      
+    ],
+    [
+      {
+        "id": "1",
+        "name": "c_custkey",
+        "required": false,
+        "type": "long"
+      },
+      {
+        "id": "2",
+        "name": "c_name",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "id": "3",
+        "name": "c_address",
+        "required": false,
+        "type": "string"
+      }
+    ]
+  ]
+}
+```
+
 
 ### Key Metrics
 
