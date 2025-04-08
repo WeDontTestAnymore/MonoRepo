@@ -70,7 +70,6 @@ example
         "required": false,
         "type": "string"
       }
-      
     ],
     [
       {
@@ -96,10 +95,9 @@ example
 }
 ```
 
-
 ### Key Metrics
 
-- `POST /api/keyMetrics/fileData` - Get table performance metrics
+- `POST /api/keyMetrics/fileData`
 
 example
 
@@ -114,7 +112,7 @@ example
 }
 ```
 
-size_bytes will not be needed as file_size already is in human-readable format, but it is neccessary to calculate total size
+`size_bytes` will not be needed as `file_size` already is in human-readable format, but it is neccessary to calculate the total size
 
 ```json
 {
@@ -134,6 +132,34 @@ size_bytes will not be needed as file_size already is in human-readable format, 
   ],
   "totalRows": 12000,
   "totalFileSize": "108.34 KB"
+}
+```
+
+- `POST /api/keyMetrics/overhead`
+
+for smaller data, there may be many or mostly all files. Try limiting it if using it in frontend
+
+example
+
+```json
+{
+  "config": {
+    "key": "minio",
+    "secret": "minio123",
+    "endpoint": "127.0.0.1:9000"
+  },
+  "icebergPath": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568"
+}
+```
+
+```json
+{
+  "overheadData": [
+    {
+      "filePath": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568/data/c_nationkey=1/20250408_130821_00004_j6i6p-639746bf-4f05-43a7-b7c6-e0c8386ee549.parquet",
+      "filesize": "4.28 KB"
+    }
+  ]
 }
 ```
 
@@ -168,7 +194,6 @@ example
 }
 ```
 
-
 ## Setup
 
 1. Install dependencies:
@@ -195,4 +220,3 @@ example
 - Access to Iceberg tables on S3, HDFS, or local filesystem
 
 #
-

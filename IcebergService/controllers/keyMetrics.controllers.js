@@ -1,10 +1,10 @@
 import { DuckDBInstance } from "@duckdb/node-api";
-import { initializeDuckDBWithS3 } from "../utils/duck-db.js";
+// import { initializeDuckDBWithS3 } from "../utils/duck-db.js";
 import { filesize } from "filesize";
 
 //config contains minio access details and icebergPath contains location for table to fetch metadta
 
-
+const overheadData = [];
 
 const findAllTableDetails = async (config, icebergPath) => {
     const instance = await DuckDBInstance.create(':memory:');
@@ -84,6 +84,9 @@ FROM parquet_metadata('${filePath}')
             resultArray.push(parquetRows[0]);
             totalRows += Number(parquetRows[0].row_count);
             totalSizeInBytes += Number(parquetRows[0].size_bytes);
+            if(Number(parquetRows[0].size_bytes)<104857600){ //100mb
+                overheadData.push({ filePath: parquetRows[0].file_path, filesize: filesize(parquetRows[0].size_bytes, { standard: "jedec" }) });
+            }
         }
         const totalFileSize = filesize(totalSizeInBytes, { standard: "jedec" });
         //console.log(resultArray,totalRows,totalFileSize);
@@ -130,6 +133,7 @@ export const getOverhead = async (req, res) => {
             return res.status(400).json({ error: "Missing config or icebergPath in request body" });
         }
 
+        return res.status(200).json({overheadData});
 
     } catch (error) {
         console.error("Error in getOverhead:", error.message);
