@@ -99,7 +99,44 @@ example
 
 ### Key Metrics
 
-- `GET /api/keyMetrics` - Get table performance metrics
+- `POST /api/keyMetrics/fileData` - Get table performance metrics
+
+example
+
+```json
+{
+  "config": {
+    "key": "minio",
+    "secret": "minio123",
+    "endpoint": "127.0.0.1:9000"
+  },
+  "icebergPath": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568"
+}
+```
+
+size_bytes will not be needed as file_size already is in human-readable format, but it is neccessary to calculate total size
+
+```json
+{
+  "fileData": [
+    {
+      "file_path": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568/data/c_nationkey=1/20250408_130821_00004_j6i6p-639746bf-4f05-43a7-b7c6-e0c8386ee549.parquet",
+      "row_count": "472",
+      "size_bytes": "4385",
+      "file_size": "4.28 KB"
+    },
+    {
+      "file_path": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568/data/c_nationkey=3/20250408_130821_00004_j6i6p-910f78da-d956-4ab4-ac21-f233e5ae3522.parquet",
+      "row_count": "552",
+      "size_bytes": "4999",
+      "file_size": "4.88 KB"
+    }
+  ],
+  "totalRows": 12000,
+  "totalFileSize": "108.34 KB"
+}
+```
+
 
 ### Snapshot Operations
 
