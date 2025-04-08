@@ -31,7 +31,59 @@ IcebergService/
 
 ### Schema Operations
 
-- `POST /api/schema` - Get table schema information
+- `POST /api/schema` 
+
+- `POST /api/schema/sampleData`
+
+example 
+
+```json
+{
+  "config": {
+    "key": "minio",
+    "secret": "minio123",
+    "endpoint": "127.0.0.1:9000"
+  },
+  "icebergPath": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568"
+}
+```
+
+```json
+{
+  "sampleData": [
+    {
+      "c_custkey": "1144",
+      "c_name": "Customer#000001144",
+      "c_address": "DGLUWG9evYLNbYhOXVzqZ LdfIMVfBjDf",
+      "c_nationkey": "1",
+      "c_phone": "11-336-453-4489",
+      "c_acctbal": 4189.04,
+      "c_mktsegment": "BUILDING",
+      "c_comment": " ideas. even, regular excuses after the ironic requests cajole blithe"
+    },
+    {
+      "c_custkey": "1183",
+      "c_name": "Customer#000001183",
+      "c_address": "qdIqRUfpmvtWo0NGsyi4qyjkwzlImP9,NrSC",
+      "c_nationkey": "1",
+      "c_phone": "11-968-244-9275",
+      "c_acctbal": 4455.76,
+      "c_mktsegment": "BUILDING",
+      "c_comment": "arefully regular dependencies. quick"
+    },
+    {
+      "c_custkey": "1234",
+      "c_name": "Customer#000001234",
+      "c_address": "B3OhbH0MRJE,F0Lc7Jq0Ttv3",
+      "c_nationkey": "1",
+      "c_phone": "11-742-434-6436",
+      "c_acctbal": -982.32,
+      "c_mktsegment": "FURNITURE",
+      "c_comment": "y ironic instructions are quickly about the slyly silent pinto beans. quickly final dependenci"
+    }
+  ]
+}
+```
 
 ### Properties Operations
 
