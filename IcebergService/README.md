@@ -128,7 +128,56 @@ example
 
 ### Properties Operations
 
-- `GET /api/properties` - Get table properties
+- `POST /api/properties/show` 
+
+example
+
+```json
+{
+  "config": {
+    "key": "minio",
+    "secret": "minio123",
+    "endpoint": "127.0.0.1:9000"
+  },
+  "icebergPath": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c"
+}
+```
+
+```json
+{
+  "tableFormat": "iceberg",
+  "storageLocation": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c"
+}
+```
+
+- `POST /api/properties/manifestFiles`
+
+example
+
+```json
+{
+  "config": {
+    "key": "minio",
+    "secret": "minio123",
+    "endpoint": "127.0.0.1:9000"
+  },
+  "icebergPath": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c"
+}
+```
+
+
+```json
+{
+  "manifestFiles": [
+    {
+      "manifest_path": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c/metadata/41bd73f3-96d4-4371-ac5d-446c69292f38-m0.avro"
+    },
+    {
+      "manifest_path": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c/metadata/41bd73f3-96d4-4371-ac5d-446c69292f38-m0.avro"
+    }
+  ]
+}
+```
 
 ### Version Operations
 
