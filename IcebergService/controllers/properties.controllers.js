@@ -55,7 +55,7 @@ export const getManifestFiles = async (req, res) => {
         await connection.run("SET unsafe_enable_version_guessing = true;");
 
         const result = await connection.runAndReadAll(`
-            select manifest_path from iceberg_metadata('${icebergPath}}');
+            select manifest_path from iceberg_metadata('${icebergPath}');
                 `);
         
         const manifestFiles =  result.getRowObjectsJson();
