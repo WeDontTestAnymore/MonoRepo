@@ -67,13 +67,3 @@ export const getManifestFiles = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
-
-export const getPartitionDetails = async (req, res) => {
-    try {
-        
-        res.status(200).json({ partitions });
-    } catch (error) {
-        console.log(error.message)
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-};

@@ -288,10 +288,10 @@ example
 {
   "snapshots": [
     {
-      "sequence_number": "1",
-      "snapshot_id": "7539855243087200788",
-      "timestamp_ms": "2025-04-08 13:08:21.766",
-      "manifest_list": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568/metadata/snap-7539855243087200788-1-549de57f-61cb-43dd-bd56-233a30e6e73c.avro"
+      "snapshot_id": "424240939754004229",
+      "timestamp_ms": "2025-04-09 07:49:18.288",
+      "added_rows_count": "1500",
+      "deleted_rows_count": "0"
     }
   ]
 }
