@@ -1,17 +1,12 @@
-// import icebergMetadata from '../refs/iceberg_default_employment_data_metadata_v2.metadata.json' assert { type: 'json' };
-import { latestMetadata } from '../utils/latestMetadata.js';
-import { listObjects } from "../utils/listObjects.js"
-import { s3setup } from "../utils/s3.js"
-
+import { DuckDBInstance } from "@duckdb/node-api"
 
 
 export const getProperties = async (req, res) => {
-    const {config,icebergPath} = req.body;
-    const icebergMetadata = latestMetadata(config,icebergPath);
+    const { config, icebergPath } = req.body;
     try {
         const properties = {
             tableFormat: "iceberg",
-            storageLocation: icebergMetadata.location
+            storageLocation: icebergPath
         };
 
         res.status(200).json(properties);
@@ -22,30 +17,60 @@ export const getProperties = async (req, res) => {
 };
 
 export const getManifestFiles = async (req, res) => {
+
+    const { config, icebergPath } = req.body;
+    const instance = await DuckDBInstance.create(':memory:');
+    const connection = await instance.connect();
+
+    if (!config.key) {
+        return console.error("s3 key not provided");
+    }
+    if (!config.secret) {
+        return console.error("s3 secret not provided");
+    }
+    if (!config.endpoint) {
+        return console.error("s3 endpoint not provided");
+    }
+
+    // for minio
+    if (!config.region) {
+        config.region = "us-east-1"
+    }
+
+
     try {
-        const { config, bucketName, objectKey } = req.body;
-        const s3 = s3setup(config);
-        const obj = await listObjects(s3, bucketName, objectKey)
-        const avroFiles = obj?.filter(obj => obj.Key.endsWith(".avro"))
-            .map(obj => obj.Key.replace(objectKey, ""));
-        const manifestFiles = avroFiles.length ? avroFiles : [];
-        res.status(200).json({ manifestFiles: manifestFiles })
+        await connection.run(`CREATE OR REPLACE SECRET secret (
+            TYPE s3,
+            KEY_ID '${config.key}',
+            SECRET '${config.secret}',
+            REGION '${config.region}',
+            ENDPOINT '${config.endpoint}',
+            USE_SSL false,
+            URL_STYLE 'path'
+    
+    );`)
+        console.log(`Initialized DuckDB S3 with key: ${config.key}, secret: ${config.secret}, region: ${config.region}`);
+
+        await connection.run("load iceberg");
+        await connection.run("SET unsafe_enable_version_guessing = true;");
+
+        const result = await connection.runAndReadAll(`
+            select manifest_path from iceberg_metadata('${icebergPath}}');
+                `);
+        
+        const manifestFiles =  result.getRowObjectsJson();
+        return res.status(200).json({manifestFiles});
+
 
     } catch (error) {
-        console.log(error.message)  
+        console.log(error.message)
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
 
 export const getPartitionDetails = async (req, res) => {
     try {
-        const partitions = icebergMetadata.partitions?.map((partition, index) => ({
-            partitionId: index + 1,
-            partitionKey: partition.key,
-            rowCount: partition.rowCount.toLocaleString(),
-            sizeMB: partition.size.toFixed(1)
-        }));
-
+        
         res.status(200).json({ partitions });
     } catch (error) {
         console.log(error.message)

@@ -211,20 +211,24 @@ example
 {
   "fileData": [
     {
-      "file_path": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568/data/c_nationkey=1/20250408_130821_00004_j6i6p-639746bf-4f05-43a7-b7c6-e0c8386ee549.parquet",
-      "row_count": "472",
-      "size_bytes": "4385",
-      "file_size": "4.28 KB"
+      "row_count": "59",
+      "partition": {
+        "c_nationkey": "1"
+      },
+      "size_bytes": "5487",
+      "file_path": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c/data/c_nationkey=1/20250409_074917_00004_jt64p-25a53cd2-8580-4122-bb34-28e373c076f8.parquet"
     },
     {
-      "file_path": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568/data/c_nationkey=3/20250408_130821_00004_j6i6p-910f78da-d956-4ab4-ac21-f233e5ae3522.parquet",
-      "row_count": "552",
-      "size_bytes": "4999",
-      "file_size": "4.88 KB"
+      "row_count": "59",
+      "partition": {
+        "c_nationkey": "1"
+      },
+      "size_bytes": "5487",
+      "file_path": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c/data/c_nationkey=1/20250409_074917_00004_jt64p-25a53cd2-8580-4122-bb34-28e373c076f8.parquet"
     }
   ],
-  "totalRows": 12000,
-  "totalFileSize": "108.34 KB"
+  "totalRows": 1475,
+  "totalFileSize": "133.96 KB"
 }
 ```
 
