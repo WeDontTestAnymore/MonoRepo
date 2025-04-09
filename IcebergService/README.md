@@ -208,7 +208,8 @@ example
 `size_bytes` will not be needed as `file_size` already is in human-readable format, but it is neccessary to calculate the total size
 
 ```json
-{
+
+  {
   "fileData": [
     {
       "row_count": "59",
@@ -219,22 +220,23 @@ example
       "file_path": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c/data/c_nationkey=1/20250409_074917_00004_jt64p-25a53cd2-8580-4122-bb34-28e373c076f8.parquet"
     },
     {
-      "row_count": "59",
+      "row_count": "69",
       "partition": {
-        "c_nationkey": "1"
+        "c_nationkey": "3"
       },
-      "size_bytes": "5487",
-      "file_path": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c/data/c_nationkey=1/20250409_074917_00004_jt64p-25a53cd2-8580-4122-bb34-28e373c076f8.parquet"
+      "size_bytes": "6092",
+      "file_path": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c/data/c_nationkey=3/20250409_074917_00004_jt64p-75163d0d-1020-4392-87e8-adb8c1c71a43.parquet"
     }
   ],
-  "totalRows": 1475,
-  "totalFileSize": "133.96 KB"
+  "totalRows": 1500,
+  "totalFileSize": "135.54 KB"
 }
+
 ```
 
 - `POST /api/keyMetrics/overhead`
 
-for smaller data, there may be many or mostly all files. Try limiting it if using it in frontend
+**for smaller data, there may be many or mostly all files. Try limiting it if using it in frontend**
 
 example
 
@@ -253,8 +255,12 @@ example
 {
   "overheadData": [
     {
-      "filePath": "s3://warehouse/customer_iceberg-1723663fcb954561ab5c9529bc709568/data/c_nationkey=1/20250408_130821_00004_j6i6p-639746bf-4f05-43a7-b7c6-e0c8386ee549.parquet",
-      "filesize": "4.28 KB"
+      "filePath": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c/data/c_nationkey=1/20250409_074917_00004_jt64p-25a53cd2-8580-4122-bb34-28e373c076f8.parquet",
+      "filesize": "5.36 KB"
+    },
+    {
+      "filePath": "s3://warehouse/customer_iceberg-6ef6d4e1ad0949c6a08a4af59466cc4c/data/c_nationkey=3/20250409_074917_00004_jt64p-75163d0d-1020-4392-87e8-adb8c1c71a43.parquet",
+      "filesize": "5.95 KB"
     }
   ]
 }
