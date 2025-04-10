@@ -8,6 +8,7 @@ import bucketRouter from "./routes/bucketRouter";
 import deltaRouter from "./routes/deltaRouter";
 import hudiRouter from "./routes/hudiRouter";
 import parquetRouter from "./routes/parquetRouter";
+import icebergRouter from "./routes/icebergRouter";
 
 const app = Express();
 
@@ -24,6 +25,8 @@ app.use("/bucket", bucketRouter);
 app.use("/delta", deltaRouter);
 app.use("/hudi", hudiRouter);
 app.use("/parquet", parquetRouter);
+app.use("/iceberg", icebergRouter);
+
 
 app.get("/ping", (req, res) => {
   res.status(200).send({ message: "pong" });

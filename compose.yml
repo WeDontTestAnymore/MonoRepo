@@ -26,9 +26,9 @@ services:
     container_name: iceberg-service
     image: ghcr.io/wedonttestanymore/iceberg-service:latest
     ports:
-      - "3001:3001"
+      - "3001:3000"
     environment:
-      - PORT=3001
+      - PORT=3000
     networks:
       - hackathon
 

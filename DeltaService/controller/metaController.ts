@@ -20,8 +20,6 @@ interface ISchemaRequest {
   fileDirectory: string;
 }
 
-<<<<<<< HEAD
-=======
 interface ICommitDetailsRequest {
   accessKey: string;
   secretKey: string;
@@ -30,7 +28,6 @@ interface ICommitDetailsRequest {
   commitFilePath: string;
 }
 
->>>>>>> delta
 interface ColumnMetadata {
   name: string;
   type: string;
@@ -129,37 +126,6 @@ export const getCommits = async (req: Request, res: Response) => {
 
 export const commitDetails = async (req: Request, res: Response) => {
   try {
-<<<<<<< HEAD
-    const body = req.body as ISchemaRequest;
-    await connection.run(`
-      CREATE OR REPLACE SECRET secret (
-        TYPE s3,
-        KEY_ID '${body.accessKey}',
-        SECRET '${body.secretKey}',
-        REGION '${body.region}',
-        ENDPOINT '${body.endpoint}',
-        URL_STYLE '${body.urlStyle}'
-      )`);
-
-    const result = await connection.run(`
-      SELECT * FROM '${body.fileDirectory}';
-    `);
-
-    const cols: any[][] = await result.getColumnsJson();
-    console.log(cols);
-    if (
-      !cols[2] ||
-      cols[2].length < 3 ||
-      !cols[2][2] ||
-      cols[2][2].stats === undefined
-    ) {
-      res.status(200).send("No data found");
-      return;
-    }
-
-    const stats = cols[2][2].stats;
-    res.send({ stats });
-=======
     const body = req.body as ICommitDetailsRequest;
     const s3Client = new S3Client({
       credentials: {
@@ -232,7 +198,6 @@ export const commitDetails = async (req: Request, res: Response) => {
           tags: addObj.tags,
         });
       }
-      // ...handle additional types if needed...
     }
 
     if (!commitInfo) {
@@ -245,7 +210,6 @@ export const commitDetails = async (req: Request, res: Response) => {
       clusterId: commitInfo.clusterId,
       changes,
     });
->>>>>>> delta
   } catch (err) {
     console.error("Error fetching commit details:", err);
     res.status(500).json({
