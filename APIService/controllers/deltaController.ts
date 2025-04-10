@@ -5,6 +5,8 @@ import { logger } from "../utils/logger";
 
 export const getCommits = async (req: Request, res: Response) => {
   try {
+    logger.info("GETCOMMITS: ", req.body);
+    
     const deltaDirectory = req.body.deltaDirectory;
     if (!deltaDirectory) {
       res.status(400).send({ message: "deltaDirectory is required" });
@@ -14,7 +16,7 @@ export const getCommits = async (req: Request, res: Response) => {
       accessKey: req.awsAccessKeyId,
       secretKey: req.awsSecretAccessKey,
       region: req.awsRegion,
-      endpoint: req.awsEndpoint.replace("http://", "").replace("https://", "").trim(),
+      endpoint: req.awsEndpoint,
       urlStyle: "path",
       deltaDirectory,
     });
@@ -30,6 +32,7 @@ export const getCommits = async (req: Request, res: Response) => {
     return;
   }
 };
+
 
 export const getSchema = async (req: Request, res: Response) => {
   try {
@@ -69,7 +72,7 @@ export const getStats = async (req: Request, res: Response) => {
       accessKey: req.awsAccessKeyId,
       secretKey: req.awsSecretAccessKey,
       region: req.awsRegion,
-      endpoint: req.awsEndpoint.replace("http://", "").replace("https://", "").trim(),
+      endpoint: req.awsEndpoint,
       urlStyle: "path",
       fileDirectory,
     });
