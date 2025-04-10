@@ -12,7 +12,7 @@ export const getCommits = async (req: Request, res: Response) => {
       res.status(400).send({ message: "deltaDirectory is required" });
       return;
     }
-    const response = await axios.post(`${config.}/commits`, {
+    const response = await axios.post(`${config.DELTA_SERVICE_URL}/commits`, {
       accessKey: req.awsAccessKeyId,
       secretKey: req.awsSecretAccessKey,
       region: req.awsRegion,
@@ -20,6 +20,7 @@ export const getCommits = async (req: Request, res: Response) => {
       urlStyle: "path",
       deltaDirectory,
     });
+
     res.json(response.data);
   } catch (err: any) {
     logger.error(err);
@@ -64,7 +65,7 @@ export const getStats = async (req: Request, res: Response) => {
   try {
     const fileDirectory = req.body.fileDirectory;
     if (!fileDirectory) {
-      res.status(400).send({ message: "fileDirectory is required" });
+      res.status(400).send({ message: "deltaDirectory is required" });
       return;
     }
     const response = await axios.post(`${config.DELTA_SERVICE_URL}/stats`, {
@@ -86,3 +87,4 @@ export const getStats = async (req: Request, res: Response) => {
     return;
   }
 };
+
