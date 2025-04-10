@@ -21,9 +21,6 @@ export default function HomePage() {
         <div className="w-2/3 flex justify-center">
           <ProcessingIllustration />
         </div>
-        <div className="w-1/3 flex items-center">
-          <TrinoIntro />
-        </div>
       </div>
 
       {/* Features Section */}

@@ -1,6 +1,6 @@
 import type { Request, RequestHandler, Response } from "express";
 import { connection } from "../db/duck";
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 
 interface ICommitsRequest {
   accessKey: string;
@@ -20,6 +20,17 @@ interface ISchemaRequest {
   fileDirectory: string;
 }
 
+<<<<<<< HEAD
+=======
+interface ICommitDetailsRequest {
+  accessKey: string;
+  secretKey: string;
+  region: string;
+  endpoint: string;
+  commitFilePath: string;
+}
+
+>>>>>>> delta
 interface ColumnMetadata {
   name: string;
   type: string;
@@ -29,18 +40,41 @@ interface ColumnMetadata {
   scale?: number;
 }
 
+// New interfaces for change types
+interface MetaDataChange {
+  type: "metaData";
+  id: string;
+  format: any;
+  schemaString: string;
+  partitionColumns: string[];
+  configuration: Record<string, any>;
+  createdTime: number;
+}
+
+interface AddChange {
+  type: "add";
+  path: string;
+  partitionValues: Record<string, string>;
+  size: number;
+  modificationTime: number;
+  dataChange: boolean;
+  stats: any;
+  tags: Record<string, any>;
+}
+
+type Change = MetaDataChange | AddChange;
+
 export const getCommits = async (req: Request, res: Response) => {
   try {
     const body = req.body as ICommitsRequest;
-
     const s3Client = new S3Client({
       credentials: {
         accessKeyId: body.accessKey,
         secretAccessKey: body.secretKey,
       },
       region: body.region,
-      endpoint: `https://` + body.endpoint,
-      forcePathStyle: true,
+      endpoint: body.endpoint, 
+      forcePathStyle: true,    
     });
 
     const deltaPath = body.deltaDirectory.replace("s3://", "");
@@ -48,12 +82,6 @@ export const getCommits = async (req: Request, res: Response) => {
     const basePath = pathParts.join("/");
 
     const prefix = basePath ? `${basePath}/_delta_log/` : "_delta_log/";
-
-    // console.log("Debug info:", {
-    //   bucket,
-    //   prefix,
-    //   originalDeltaPath: body.deltaDirectory,
-    // });
 
     const command = new ListObjectsV2Command({
       Bucket: bucket,
@@ -99,8 +127,9 @@ export const getCommits = async (req: Request, res: Response) => {
   }
 };
 
-export const getStats = async (req: Request, res: Response) => {
+export const commitDetails = async (req: Request, res: Response) => {
   try {
+<<<<<<< HEAD
     const body = req.body as ISchemaRequest;
     await connection.run(`
       CREATE OR REPLACE SECRET secret (
@@ -130,99 +159,95 @@ export const getStats = async (req: Request, res: Response) => {
 
     const stats = cols[2][2].stats;
     res.send({ stats });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-      details: err instanceof Error ? err.stack : undefined,
+=======
+    const body = req.body as ICommitDetailsRequest;
+    const s3Client = new S3Client({
+      credentials: {
+        accessKeyId: body.accessKey,
+        secretAccessKey: body.secretKey,
+      },
+      region: body.region,
+      endpoint: body.endpoint,
+      forcePathStyle: true,
     });
-  }
-};
 
-// export const getCheckpoints = async (req: Request, res: Response) => {
-//   try {
-//     const body = req.body as ISchemaRequest;
+    const commitPath = body.commitFilePath.replace("s3://", "");
+    const [bucket, ...keyParts] = commitPath.split("/");
+    const key = keyParts.join("/");
 
-//     const s3Client = new S3Client({
-//       credentials: {
-//         accessKeyId: body.accessKey,
-//         secretAccessKey: body.secretKey,
-//       },
-//       region: body.region,
-//       endpoint: body.endpoint,
-//       forcePathStyle: body.urlStyle === "path",
-//     });
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    });
+    const s3Response = await s3Client.send(command);
 
-//     const s3Uri = new URL(body.);
-//     const bucket = s3Uri.hostname;
-//     const prefix = `${s3Uri.pathname.slice(1)}/_delta_log/`.replace(/^\//, "");
+    // Helper function to read stream into a string
+    const streamToString = async (stream: any): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+        stream.on("error", reject);
+        stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+      });
+    };
 
-//     const command = new ListObjectsV2Command({
-//       Bucket: bucket,
-//       Prefix: prefix,
-//     });
+    const fileContent = await streamToString(s3Response.Body);
+    const jsonObjects = fileContent.match(/{[\s\S]*?}(?=\s*{|\s*$)/g) || [];
+    
+    let commitInfo: any = null;
+    const changes: Change[] = [];
+    for (const json of jsonObjects) {
+      const obj = JSON.parse(json);
+      if (obj.commitInfo) {
+        commitInfo = obj.commitInfo;
+      }
+      if (obj.metaData) {
+        const meta = obj.metaData;
+        changes.push({
+          type: "metaData",
+          id: meta.id,
+          format: meta.format,
+          schemaString: meta.schemaString,
+          partitionColumns: meta.partitionColumns,
+          configuration: meta.configuration,
+          createdTime: meta.createdTime,
+        });
+      }
+      if (obj.add) {
+        const addObj = obj.add;
+        let statsParsed;
+        try {
+          statsParsed = JSON.parse(addObj.stats);
+        } catch {
+          statsParsed = addObj.stats;
+        }
+        changes.push({
+          type: "add",
+          path: addObj.path,
+          partitionValues: addObj.partitionValues,
+          size: addObj.size,
+          modificationTime: addObj.modificationTime,
+          dataChange: addObj.dataChange,
+          stats: statsParsed,
+          tags: addObj.tags,
+        });
+      }
+      // ...handle additional types if needed...
+    }
 
-//     const response = await s3Client.send(command);
+    if (!commitInfo) {
+      throw new Error("commitInfo not found in file");
+    }
 
-//     const checkpoints =
-//       response.Contents?.filter((obj) =>
-//         obj.Key?.endsWith(".checkpoint.parquet"),
-//       )
-//         .map((obj) => {
-//           const fileName = obj.Key?.split("/").pop() || "";
-//           const version = fileName.match(/(\d+)\.checkpoint\.parquet$/)?.[1];
-//           return {
-//             fileName,
-//             version: version ? parseInt(version) : null,
-//             size: obj.Size,
-//             lastModified: obj.LastModified,
-//           };
-//         })
-//         .sort((a, b) => (b.version || 0) - (a.version || 0)) || [];
-
-//     res.json({
-//       success: true,
-//       checkpoints,
-//       totalCheckpoints: checkpoints.length,
-//     });
-//   } catch (err) {
-//     console.error("Error fetching schema:", err);
-//     res.status(500).json({
-//       success: false,
-//       error: err instanceof Error ? err.message : "Unknown error occurred",
-//     });
-//   }
-// };
-
-export const getSchema = async (req: Request, res: Response) => {
-  try {
-    const body = req.body as ISchemaRequest;
-    await connection.run(`
-        CREATE OR REPLACE SECRET secret (
-            TYPE s3,
-            KEY_ID '${body.accessKey}',
-            SECRET '${body.secretKey}',
-            REGION '${body.region}',
-            ENDPOINT '${body.endpoint}',
-            URL_STYLE '${body.urlStyle}'
-        )`);
-    console.log("HERE");
-
-    const result = await connection.run(`
-        SELECT * FROM '${body.fileDirectory}';
-    `);
-
-    const cols = await result.getColumnsJson();
-    console.log(cols);
-    /**
-     * @todo fix ts here
-     */
-    const schema = cols[1][1].schemaString;
-
-    res.send({ schema });
+    res.json({
+      timestamp: commitInfo.timestamp,
+      userId: commitInfo.userId,
+      clusterId: commitInfo.clusterId,
+      changes,
+    });
+>>>>>>> delta
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching commit details:", err);
     res.status(500).json({
       success: false,
       error: err instanceof Error ? err.message : "Unknown error occurred",

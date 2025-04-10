@@ -6,6 +6,6 @@ import bucketValidator from "../middleware/bucketValidator";
 
 const authRouter = Router();
 
-authRouter.post('/login', loginValidator, bucketValidator, Login);
+authRouter.post('/login',loginValidator,bucketValidator, Login);
 
 export default authRouter;

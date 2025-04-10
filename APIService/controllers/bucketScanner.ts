@@ -22,12 +22,16 @@ interface TableLocation {
  */
 export const BucketScanner = async (req: Request, res: Response) => {
   try {
+    const endpoint = req.awsEndpoint?.startsWith("http")
+      ? req.awsEndpoint
+      : `https://${req.awsEndpoint}`;
+
     const s3Client = new S3Client({
       credentials: {
         accessKeyId: req.awsAccessKeyId!,
         secretAccessKey: req.awsSecretAccessKey!,
       },
-      endpoint: req.awsEndpoint,
+      endpoint,
       region: req.awsRegion,
       forcePathStyle: true,
     });
@@ -112,7 +116,6 @@ async function scanBucket(
       );
 
       if (hasMetadata) {
-        // Check for at least one .metadata.json file
         const metaParams = {
           ...params,
           Prefix: `${currentPrefix}metadata/`,
@@ -124,7 +127,7 @@ async function scanBucket(
         if (metaRes.Contents?.some((c) => c.Key?.endsWith(".metadata.json"))) {
           tables.push({
             type: "ICEBERG",
-            path: `s3://${config.bucket}/${currentPrefix}`,
+            path: currentPrefix
           });
           continue;
         }
@@ -132,14 +135,14 @@ async function scanBucket(
       if (hasDeltaLog) {
         tables.push({
           type: "DELTA",
-          path: `s3://${config.bucket}/${currentPrefix}`,
+          path: currentPrefix, // updated: using bucket as root
         });
         continue;
       }
       if (hasHoodie) {
         tables.push({
           type: "HOODIE",
-          path: `s3://${config.bucket}/${currentPrefix}`,
+          path: currentPrefix, // updated: using bucket as root
         });
         continue;
       }
