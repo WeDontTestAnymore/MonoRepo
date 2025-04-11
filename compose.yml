@@ -71,7 +71,7 @@ services:
       - BACKEND_PORT=3000
       - COOKIE_TIMEOUT_MIN=60
       - MAX_SCAN_DEPTH=2
-      - ICEBERG_SERVICE_URL=http://iceberg-service:3001
+      - ICEBERG_SERVICE_URL=http://iceberg-service:3000
       - DELTA_SERVICE_URL=http://delta-service:3002
       - HUDI_SERVICE_URL=http://hudi-service:8000
       - PARQUET_SERVICE_URL=http://parquet-service:3004
