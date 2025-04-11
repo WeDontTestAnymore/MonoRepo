@@ -71,7 +71,7 @@ services:
       - BACKEND_PORT=3000
       - COOKIE_TIMEOUT_MIN=60
       - MAX_SCAN_DEPTH=2
-      - ICEBERG_SERVICE_URL=http://iceberg-service:3000
+      - ICEBERG_SERVICE_URL=http://iceberg-service:3001
       - DELTA_SERVICE_URL=http://delta-service:3002
       - HUDI_SERVICE_URL=http://hudi-service:8000
       - PARQUET_SERVICE_URL=http://parquet-service:3004
@@ -98,8 +98,8 @@ services:
     volumes:
       - minio_data:/data
     environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
+      MINIO_ROOT_USER: minio 
+      MINIO_ROOT_PASSWORD: minio123 
     command: server --console-address ":9001" /data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -108,7 +108,7 @@ services:
       retries: 3
     restart: unless-stopped
     networks:
-      - hackathon
+        - hackathon
 
 volumes:
   postgresdb:

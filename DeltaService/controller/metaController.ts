@@ -1,5 +1,4 @@
-import type { Request, RequestHandler, Response } from "express";
-import { connection } from "../db/duck";
+import type { Request, Response } from "express";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 
 interface ICommitsRequest {
@@ -37,7 +36,6 @@ interface ColumnMetadata {
   scale?: number;
 }
 
-// New interfaces for change types
 interface MetaDataChange {
   type: "metaData";
   id: string;
@@ -86,33 +84,25 @@ export const getCommits = async (req: Request, res: Response) => {
     });
 
     const response = await s3Client.send(command);
-    console.log(response.Contents);
 
-    const commits =
+    const commitFiles =
       response.Contents?.filter((obj) => obj.Key?.endsWith(".json"))
-        .map((obj) => {
-          const fileName = obj.Key?.split("/").pop() || "";
-          const version = fileName.match(/(\d+)\.json$/)?.[1];
-          return {
-            fileName,
-            version: version ? parseInt(version) : null,
-            size: obj.Size,
-            lastModified: obj.LastModified,
-            path: obj.Key,
-          };
-        })
-        .sort((a, b) => (b.version || 0) - (a.version || 0)) || [];
+        .map((obj) => obj.Key?.split("/").pop() || "") || [];
+
+    const lastCommit = commitFiles
+      .map((fileName) => fileName.match(/(\d+)\.json$/)?.[1])
+      .filter((version) => version !== undefined)
+      .map((version) => parseInt(version as string))
+      .sort((a, b) => b - a)[0];
+
+    const checkpointFiles =
+      response.Contents?.filter((obj) => obj.Key?.endsWith(".checkpoint.parquet"))
+        .map((obj) => obj.Key?.split("/").pop() || "") || [];
+
     res.json({
       success: true,
-      commits,
-      totalCommits: commits.length,
-      latestCommit: commits[0] || null,
-      oldestCommit: commits[commits.length - 1] || null,
-      metadata: {
-        bucket,
-        prefix,
-        endpoint: body.endpoint,
-      },
+      lastCommit: lastCommit !== undefined ? `${lastCommit.toString().padStart(20, '0')}.json` : null,
+      checkpointFiles,
     });
   } catch (err) {
     console.error("Error fetching commits:", err);
@@ -147,7 +137,6 @@ export const commitDetails = async (req: Request, res: Response) => {
     });
     const s3Response = await s3Client.send(command);
 
-    // Helper function to read stream into a string
     const streamToString = async (stream: any): Promise<string> => {
       return new Promise((resolve, reject) => {
         const chunks: Buffer[] = [];
@@ -219,3 +208,89 @@ export const commitDetails = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getCommitSchema = async (req: Request, res: Response) => {
+  try {
+    const body = req.body as { commitName: string; accessKey: string; secretKey: string; region: string; endpoint: string; deltaDirectory: string };
+    const s3Client = new S3Client({
+      credentials: {
+        accessKeyId: body.accessKey,
+        secretAccessKey: body.secretKey,
+      },
+      region: body.region,
+      endpoint: body.endpoint,
+      forcePathStyle: true,
+    });
+
+    const deltaPath = body.deltaDirectory.replace("s3://", "");
+    const [bucket, ...pathParts] = deltaPath.split("/");
+    const basePath = pathParts.join("/");
+    const prefix = basePath ? `${basePath}/_delta_log/` : "_delta_log/";
+
+    let currentCommit = BigInt(body.commitName.toString()); 
+    const maxLookback = 10;
+    let metaDataChange = null;
+
+    for (let i = 0; i < maxLookback && currentCommit >= 0; i++) {
+      const commitFileName = `${currentCommit.toString().padStart(20, '0')}.json`;
+      const commitKey = `${prefix}${commitFileName}`;
+
+      try {
+        const command = new GetObjectCommand({
+          Bucket: bucket,
+          Key: commitKey,
+        });
+        const response = await s3Client.send(command);
+
+        const streamToString = async (stream: any): Promise<string> => {
+          return new Promise((resolve, reject) => {
+            const chunks: Buffer[] = [];
+            stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+            stream.on("error", reject);
+            stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+          });
+        };
+
+        const fileContent = await streamToString(response.Body);
+        const jsonObjects = fileContent.split("\n").filter((line) => line.trim() !== "");
+
+        for (const json of jsonObjects) {
+          const obj = JSON.parse(json);
+          if (obj.metaData) {
+            metaDataChange = obj.metaData;
+            break;
+          }
+        }
+
+        if (metaDataChange) {
+          break;
+        }
+      } catch (err) {
+        console.warn(`Error fetching or parsing commit file ${commitFileName}:`, err);
+      }
+
+      currentCommit = currentCommit > 0n ? currentCommit - 1n : 0n; // Decrement using BigInt
+    }
+
+    if (!metaDataChange) {
+      res.status(404).json({
+        success: false,
+        message: "No metaData change found in the last 10 commits.",
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      metaDataChange,
+    });
+  } catch (err) {
+    console.error("Error in getCommitSchema:", err);
+    res.status(500).json({
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error occurred",
+      details: err instanceof Error ? err.stack : undefined,
+    });
+  }
+};
+

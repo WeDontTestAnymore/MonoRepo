@@ -135,14 +135,14 @@ async function scanBucket(
       if (hasDeltaLog) {
         tables.push({
           type: "DELTA",
-          path: currentPrefix, // updated: using bucket as root
+          path: currentPrefix, 
         });
         continue;
       }
       if (hasHoodie) {
         tables.push({
           type: "HOODIE",
-          path: currentPrefix, // updated: using bucket as root
+          path: currentPrefix, 
         });
         continue;
       }

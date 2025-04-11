@@ -3,8 +3,7 @@ import { connection } from "./db/duck";
 import {
   commitDetails,
   getCommits,
-  // getSchema,
-  // getStats,
+  getCommitSchema,
 } from "./controller/metaController";
 
 const app = express();
@@ -13,7 +12,7 @@ app.use(express.json());
 // app.post("/checkpoints", getCheckpoints);
 app.post("/commits", getCommits);
 app.post("/details", commitDetails);
-// app.post("/stats", getStats);
+app.post("/commitSchema", getCommitSchema );
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -3,14 +3,14 @@ import { Login } from "../controllers/authController";
 import { authMiddleware } from "../middleware/authMiddleware";
 import {
   getCommits,
-  getSchema,
-  getStats,
+  commitDetails,
+  getCommitSchema,
 } from "../controllers/deltaController";
 
 const deltaRouter = Router();
 
 deltaRouter.post("/commits", authMiddleware, getCommits);
-deltaRouter.post("/schema", authMiddleware, getSchema);
-deltaRouter.post("/stats", authMiddleware, getStats);
+deltaRouter.post("/details", authMiddleware, commitDetails);
+deltaRouter.post("/commitSchema", authMiddleware, getCommitSchema);
 
 export default deltaRouter;

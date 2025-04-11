@@ -5,8 +5,7 @@ import { logger } from "../utils/logger";
 
 export const getCommits = async (req: Request, res: Response) => {
   try {
-    logger.info("GETCOMMITS: ", req.body);
-    
+    // logger.info("GETCOMMITS: ", req.body);
     const deltaDirectory = req.body.deltaDirectory;
     if (!deltaDirectory) {
       res.status(400).send({ message: "deltaDirectory is required" });
@@ -34,20 +33,20 @@ export const getCommits = async (req: Request, res: Response) => {
 };
 
 
-export const getSchema = async (req: Request, res: Response) => {
+export const commitDetails = async (req: Request, res: Response) => {
   try {
-    const fileDirectory = req.body.fileDirectory;
-    if (!fileDirectory) {
-      res.status(400).send({ message: "deltaDirectory is required" });
+    const commitFilePath = req.body.commitFilePath;
+    if (!commitFilePath) {
+      res.status(400).send({ message: "commitFilePath is required" });
       return;
     }
-    const response = await axios.post(`${config.DELTA_SERVICE_URL}/schema`, {
+    const response = await axios.post(`${config.DELTA_SERVICE_URL}/details`, {
       accessKey: req.awsAccessKeyId,
       secretKey: req.awsSecretAccessKey,
       region: req.awsRegion,
-      endpoint: req.awsEndpoint.replace("http://", "").replace("https://", "").trim(),
+      endpoint: req.awsEndpoint,
       urlStyle: "path",
-      fileDirectory,
+      commitFilePath,
     });
     res.json(response.data);
   } catch (err: any) {
@@ -61,20 +60,26 @@ export const getSchema = async (req: Request, res: Response) => {
   }
 };
 
-export const getStats = async (req: Request, res: Response) => {
-  try {
-    const fileDirectory = req.body.fileDirectory;
-    if (!fileDirectory) {
+export const getCommitSchema = async (req: Request, res: Response) => {
+try {
+    const deltaDirectory = req.body.deltaDirectory;
+    const commitName = req.body.commitName;
+    if (!deltaDirectory) {
       res.status(400).send({ message: "deltaDirectory is required" });
       return;
     }
-    const response = await axios.post(`${config.DELTA_SERVICE_URL}/stats`, {
+    if (!commitName) {
+      res.status(400).send({ message: "commitName is required" });
+      return;
+    }
+    const response = await axios.post(`${config.DELTA_SERVICE_URL}/commitSchema`, {
       accessKey: req.awsAccessKeyId,
       secretKey: req.awsSecretAccessKey,
       region: req.awsRegion,
       endpoint: req.awsEndpoint,
       urlStyle: "path",
-      fileDirectory,
+      deltaDirectory,
+      commitName
     });
     res.json(response.data);
   } catch (err: any) {
