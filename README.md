@@ -32,6 +32,24 @@ Refer to individual service directories for corresponding microservice documenta
 
 # API DOCUMENTATION
 
+# API Documentation Index
+
+## Apache Iceberg Tables
+
+- [Schema Operations](#schema-operations)
+  - [POST /iceberg/schema/details](#post-icebergschemadetails)
+  - [POST /iceberg/schema/sampleData](#post-icebergschemasampledata)
+- [Properties Operations](#properties-operations)
+  - [POST /iceberg/properties/show](#post-icebergpropertiesshow)
+  - [POST /iceberg/properties/manifestFiles](#post-icebergpropertiesmanifestfiles)
+- [Version Operations](#version-operations)
+  - [POST /iceberg/versions/all](#post-icebergversionsall)
+- [Key Metrics](#key-metrics)
+  - [POST /iceberg/keyMetrics/fileData](#post-icebergkeymetricsfiledata)
+  - [POST /iceberg/keyMetrics/overhead](#post-icebergkeymetricsoverhead)
+- [Snapshot Operations](#snapshot-operations)
+  - [POST /iceberg/snapshots/show](#post-icebergsnapshotsshow)
+
 ## Apache Iceberg Tables 
 
 

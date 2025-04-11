@@ -43,7 +43,12 @@ export const BucketScanner = async (req: Request, res: Response) => {
     };
 
     const tables = await scanBucket(s3Client, config);
-    res.json({ tables });
+
+    // const updatedTables = tables.map((table) => ({
+    //   ...table,
+    //   path: `s3://${config.bucket}/${table.path}`,
+    // }));
+    res.json({ tables, basePath: `s3://${config.bucket}` });
     return;
   } catch (err) {
     console.log(err);
