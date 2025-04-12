@@ -8,6 +8,7 @@ import {
   getFileData,
   getOverhead,
   getSnapshots,
+  getOverheadCSV,
 } from "../controllers/icebergController";
 import { authMiddleware } from "../middleware/authMiddleware";
 
@@ -21,5 +22,6 @@ router.post("/versions/all", authMiddleware, getAllVersions);
 router.post("/keyMetrics/fileData", authMiddleware, getFileData);
 router.post("/keyMetrics/overhead", authMiddleware, getOverhead);
 router.post("/snapshots/show", authMiddleware, getSnapshots);
+router.post("/keyMetrics/overheadCSV", authMiddleware, getOverheadCSV);
 
 export default router;

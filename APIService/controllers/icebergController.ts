@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import cfg from "../utils/config";
 import axios from "axios";
 import { logger } from "../utils/logger";
+import { writeFileSync } from "fs";
+import { join } from "path";
 
 export const getDetails = async (req: Request, res: Response) => {
   try {
@@ -211,7 +213,53 @@ export const getOverhead = async (req: Request, res: Response) => {
         icebergPath,
       },
     );
-    res.json(response.data);
+    res.json({ noOfFiles: response.data.overheadData.length || 0 });
+  } catch (err: any) {
+    logger.error(err);
+    res
+      .status(err.response?.status || 500)
+      .send(err.response?.data || { message: "Internal Server Error" });
+  }
+};
+
+export const getOverheadCSV = async (req: Request, res: Response) => {
+  try {
+    const icebergPath = req.body.icebergPath;
+    if (!icebergPath) {
+      res.status(400).send({ message: "icebergPath is required" });
+      return;
+    }
+    const response = await axios.post(
+      `${cfg.ICEBERG_SERVICE_URL}/api/keyMetrics/overhead`,
+      {
+        config: {
+          key: req.awsAccessKeyId,
+          secret: req.awsSecretAccessKey,
+          endpoint: req.awsEndpoint
+            ?.replace("http://", "")
+            .replace("https://", "")
+            .trim(),
+        },
+        icebergPath,
+      },
+    );
+
+    const overheadData = response.data.overheadData;
+    if (!overheadData || !Array.isArray(overheadData)) {
+      res.status(500).send({ message: "Invalid data format received" });
+      return;
+    }
+
+    const csvHeaders = Object.keys(overheadData[0]).join(",");
+    const csvRows = overheadData.map((row: any) =>
+      Object.values(row).join(",")
+    );
+    const csvContent = [csvHeaders, ...csvRows].join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=overheadData.csv");
+    res.send(csvContent);
+
   } catch (err: any) {
     logger.error(err);
     res
