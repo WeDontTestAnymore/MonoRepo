@@ -67,11 +67,7 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
 
   useEffect(() => {
     if (selectedTable) fetchCommits(selectedTable);
-<<<<<<< HEAD
   }, []);
-=======
-  }, [selectedTable]);
->>>>>>> 3cfe41a9d46e3f8725e4d45d051f3695f6abf8bf
 
   return (
     <div>

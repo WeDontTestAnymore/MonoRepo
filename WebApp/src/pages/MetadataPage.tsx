@@ -23,15 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import DeltaTableSchema from "@/components/Metadata/Delta/DeltaTableSchema";
-<<<<<<< HEAD
 import DeltaTableProperties from "@/components/Metadata/Delta/DeltaTableProperties";
-import DeltaVersioning from "@/components/Metadata/Delta/DeltaVersioning";
-import DeltaKeyMetrics from "@/components/Metadata/Delta/DeltaKeyMetrics";
-=======
+import DeltaTableSchema from "@/components/Metadata/Delta/DeltaTableSchema";
 import DeltaKeyMetrics from "@/components/Metadata/Delta/DeltaKeyMetrics";
 import DeltaVersioning from "@/components/Metadata/Delta/DeltaVersioning";
->>>>>>> 3cfe41a9d46e3f8725e4d45d051f3695f6abf8bf
 import HudiTableSchema from "@/components/Metadata/Hudi/HudiTableSchema";
 import HudiTableProperties from "@/components/Metadata/Hudi/HudiTableProperties";
 import HudiVersioning from "@/components/Metadata/Hudi/HudiVersioning";
