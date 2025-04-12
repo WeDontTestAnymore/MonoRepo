@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Metadata/Sidebar";
-import TableSchema from "@/components/Metadata/TableSchema";
 import QueryBuilder from "@/components/Metadata/QueryBuilder";
 import SchemaViewer from "@/components/Metadata/SchemaViewer";
 import { Toaster } from "sonner";
@@ -25,12 +24,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import DeltaTableSchema from "@/components/Metadata/Delta/DeltaTableSchema";
+<<<<<<< HEAD
+import DeltaTableProperties from "@/components/Metadata/Delta/DeltaTableProperties";
+import DeltaVersioning from "@/components/Metadata/Delta/DeltaVersioning";
+import DeltaKeyMetrics from "@/components/Metadata/Delta/DeltaKeyMetrics";
+=======
 import DeltaKeyMetrics from "@/components/Metadata/Delta/DeltaKeyMetrics";
 import DeltaVersioning from "@/components/Metadata/Delta/DeltaVersioning";
+>>>>>>> 3cfe41a9d46e3f8725e4d45d051f3695f6abf8bf
 import HudiTableSchema from "@/components/Metadata/Hudi/HudiTableSchema";
 import HudiTableProperties from "@/components/Metadata/Hudi/HudiTableProperties";
 import HudiVersioning from "@/components/Metadata/Hudi/HudiVersioning";
 import HudiKeyMetrics from "@/components/Metadata/Hudi/HudiKeyMetrics";
+import IcebergTableSchema from "@/components/Metadata/Iceberg/IcebergTableSchema";
+import IcebergTableProperties from "@/components/Metadata/Iceberg/IcebergTableProperties";
+import IcebergVersioning from "@/components/Metadata/Iceberg/IcebergVersioning";
+import IcerbergKeyMetrics from "@/components/Metadata/Iceberg/IcerbergKeyMetrics";
 import ParquetInfo from "@/components/Metadata/Parquet/ParuqetInfo";
 import { TableTypes } from "@/contexts/tableCred.slice";
 
@@ -67,10 +76,10 @@ const MetadataPage = () => {
           dispatch(setBasePath(extractedBasePath)); // Store base path in Redux
 
           const tableNames = response.data.tables.map((t: any) => {
-            const segments = t.path.split("/");
-            const tableName = segments[segments.length - 2]; // Extracts table name
-            return `/${t.type.toLowerCase()}/${tableName}`; // Formats as /delta/table or /iceberg/table
+            console.log("🚀 ~ t:", t);
+            return t.path;
           });
+          console.log("🚀 ~ tableNames ~ tableNames:", tableNames);
 
           setAvailableTables(tableNames);
           setSelectedTable(tableNames[0] || "");
@@ -89,7 +98,7 @@ const MetadataPage = () => {
         const tableName = t.path
           .replace("s3://datalake/", "")
           .replace(/\/$/, ""); // Remove prefix & trailing slash
-        return `/${tableName}`;
+        return `${tableName}`;
       });
 
       setAvailableTables(tableNames);
@@ -124,7 +133,9 @@ const MetadataPage = () => {
   };
 
   const getTableType = (selectedTable: string) => {
+    console.log("Checking Type: ", selectedTable);
     const table = tableCred?.find((t) => t.path.includes(selectedTable));
+    console.log("Table Type: ", table?.type);
 
     return table ? table.type : "unknown";
   };
@@ -156,15 +167,15 @@ const MetadataPage = () => {
               ) : tableType === "HOODIE" ? (
                 <HudiTableSchema selectedTable={selectedTable} />
               ) : (
-                <TableSchema selectedTable={selectedTable} />
+                <IcebergTableSchema selectedTable={selectedTable} />
               ))}
             {activeSection === "Properties" &&
               (tableType === "DELTA" ? (
-                <DeltaTableSchema selectedTable={selectedTable} />
+                <DeltaTableProperties selectedTable={selectedTable} />
               ) : tableType === "HOODIE" ? (
                 <HudiTableProperties selectedTable={selectedTable} />
               ) : (
-                <TableSchema selectedTable={selectedTable} />
+                <IcebergTableProperties selectedTable={selectedTable} />
               ))}
             {activeSection === "Versioning & Snapshots" &&
               (tableType === "DELTA" ? (
@@ -172,7 +183,7 @@ const MetadataPage = () => {
               ) : tableType === "HOODIE" ? (
                 <HudiVersioning selectedTable={selectedTable} />
               ) : (
-                <TableSchema selectedTable={selectedTable} />
+                <IcebergVersioning selectedTable={selectedTable} />
               ))}
             {activeSection === "Key Metrics" &&
               (tableType === "DELTA" ? (
@@ -180,7 +191,7 @@ const MetadataPage = () => {
               ) : tableType === "HOODIE" ? (
                 <HudiKeyMetrics selectedTable={selectedTable} />
               ) : (
-                <TableSchema selectedTable={selectedTable} />
+                <IcerbergKeyMetrics selectedTable={selectedTable} />
               ))}
             {activeSection === "Schema Viewer" && <SchemaViewer />}
             {activeSection === "Run Query" && <QueryBuilder />}

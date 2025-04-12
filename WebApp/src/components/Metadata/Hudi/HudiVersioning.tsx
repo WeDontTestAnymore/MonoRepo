@@ -86,7 +86,7 @@ const HudiVersioning = ({ selectedTable }: HudiVersioningProps) => {
     if (selectedTable) {
       fetchHudiVersioning(selectedTable);
     }
-  }, [selectedTable]);
+  }, []);
 
   if (loading) return <div>Loading...</div>;
   if (!versions.length) return <div>No versioning data available.</div>;

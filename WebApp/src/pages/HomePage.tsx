@@ -3,7 +3,6 @@ import Header from "@/components/Home/Header";
 import Footer from "@/components/Home/Footer";
 import FeaturesSection from "@/components/Home/FeatureSection";
 import ProcessingIllustration from "@/components/Home/ProcessingIllustration";
-import TrinoIntro from "@/components/Home/TrinoIntro";
 
 export default function HomePage() {
   return (

@@ -87,8 +87,8 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
   };
 
   useEffect(() => {
-    fetchParquetInfo();
-  }, [selectedTable]);
+    if (selectedTable) fetchParquetInfo();
+  }, []);
 
   if (loading) {
     return <div className="text-center text-black">Loading...</div>;

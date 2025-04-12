@@ -73,9 +73,16 @@ export default function CloudProviderForm() {
 
           console.log(metadataResponse.data.tables);
 
-          // Extract base path (e.g., "s3://datalake")
-          const firstPath = metadataResponse.data.tables[0]?.path || "";
-          const extractedBasePath = firstPath.split("/").slice(0, 3).join("/");
+          const extractedBasePath = metadataResponse.data.basePath;
+
+          // // Extract base path (e.g., "s3://datalake")
+          // const firstPath = metadataResponse.data.tables[0]?.path || "";
+          // console.log("🚀 ~ handleSubmit ~ firstPath:", firstPath);
+          // const extractedBasePath = firstPath.split("/").slice(0, 3).join("/");
+          console.log(
+            "🚀 ~ handleSubmit ~ extractedBasePath:",
+            extractedBasePath
+          );
 
           dispatch(setBasePath(extractedBasePath)); // Store base path in Redux
 

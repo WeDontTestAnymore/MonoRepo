@@ -53,7 +53,7 @@ const HudiKeyMetrics = ({ selectedTable }: HudiKeyMetricsProps) => {
       setLoading(true);
       fetchHudiKeyMetrics(selectedTable);
     }
-  }, [selectedTable]);
+  }, []);
 
   if (loading) return <div>Loading...</div>;
 

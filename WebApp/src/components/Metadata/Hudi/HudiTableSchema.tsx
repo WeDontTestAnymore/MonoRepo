@@ -62,7 +62,7 @@ export default function HudiTableSchema({
 
   useEffect(() => {
     fetchHudiTableSchema();
-  }, [selectedTable]);
+  }, []);
 
   const handleDownload = () => {
     setIsDownloading(true);

@@ -41,7 +41,7 @@ const HudiTableProperties = ({ selectedTable }: HudiTablePropertiesProps) => {
       setLoading(true);
       fetchHudiTableSchema(selectedTable);
     }
-  }, [selectedTable]);
+  }, []);
 
   if (loading) {
     return <div>Loading...</div>;
