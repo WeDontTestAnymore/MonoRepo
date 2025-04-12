@@ -340,7 +340,8 @@ example
       "snapshot_id": "424240939754004229",
       "timestamp_ms": "2025-04-09 07:49:18.288",
       "added_rows_count": "1500",
-      "deleted_rows_count": "0"
+      "deleted_rows_count": "0",
+      "existing_rows_count": "0"
     }
   ]
 }

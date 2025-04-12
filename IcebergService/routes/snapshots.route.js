@@ -48,16 +48,23 @@ const showSnapshots = async (req, res) => {
                 const manifestStats = await connection.runAndReadAll(`
                     SELECT
                         COALESCE(SUM(added_rows_count), 0) AS added_rows_count,
-                        COALESCE(SUM(deleted_rows_count), 0) AS deleted_rows_count
+                        COALESCE(SUM(deleted_rows_count), 0) AS deleted_rows_count,
+                        COALESCE(SUM(existing_rows_count), 0) AS existing_rows_count
                     FROM read_avro('${manifest_list}');
                 `);
 
-                const { added_rows_count, deleted_rows_count } = manifestStats.getRowObjectsJson()[0];
+                const {
+                    added_rows_count,
+                    deleted_rows_count,
+                    existing_rows_count
+                } = manifestStats.getRowObjectsJson()[0];
+
                 response.push({
                     snapshot_id,
                     timestamp_ms,
                     added_rows_count,
-                    deleted_rows_count
+                    deleted_rows_count,
+                    existing_rows_count
                 });
             } catch (innerErr) {
                 console.warn(`Could not read manifest: ${manifest_list}`, innerErr.message);
@@ -66,6 +73,7 @@ const showSnapshots = async (req, res) => {
                     timestamp_ms,
                     added_rows_count: null,
                     deleted_rows_count: null,
+                    existing_rows_count: null,
                     error: "Failed to read manifest"
                 });
             }
