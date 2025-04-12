@@ -28,6 +28,9 @@ const showSnapshots = async (req, res) => {
             );
         `);
 
+        await connection.run("INSTALL avro;");
+        await connection.run("INSTALL iceberg;");
+
         await connection.run("LOAD iceberg;");
         await connection.run("LOAD avro;");
         await connection.run("SET unsafe_enable_version_guessing = true;");
