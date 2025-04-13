@@ -148,7 +148,10 @@ export const getAllVersions = async (req: Request, res: Response) => {
         config: {
           key: req.awsAccessKeyId,
           secret: req.awsSecretAccessKey,
-          endpoint: req.awsEndpoint,
+          endpoint: req.awsEndpoint
+            ?.replace("http://", "")
+            .replace("https://", "")
+            .trim(),
         },
         icebergPath,
       },
