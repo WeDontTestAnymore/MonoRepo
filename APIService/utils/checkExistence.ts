@@ -1,8 +1,6 @@
 import { S3Client, HeadObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 
-// Checks if a directory exists in an S3 bucket.
 export async function checkDirExistence(bucketName: string, credentials: { accessKeyId: string; secretAccessKey: string; region: string; endpoint?: string }, path: string): Promise<boolean> {
-	// Normalize bucket and path
 	let effectiveBucket = bucketName;
 	let cleanedPath = path;
 	if (path.startsWith('s3://')) {
@@ -13,7 +11,6 @@ export async function checkDirExistence(bucketName: string, credentials: { acces
 		}
 	}
 	cleanedPath = cleanedPath.replace("s3://", "").trim();
-	// Ensure the path has a trailing slash for directories
 	if (!cleanedPath.endsWith('/')) {
 		cleanedPath += '/';
 	}
