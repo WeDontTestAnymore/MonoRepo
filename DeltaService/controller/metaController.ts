@@ -232,7 +232,6 @@ export const getCommitSchema = async (req: Request, res: Response) => {
     const maxLookback = 10;
 
     for (let i = 0; i < maxLookback && currentCommit >= 0; i++) {
-      // try checkpoint file first
       const checkpointFileName = `${currentCommit.toString().padStart(20, "0")}.checkpoint.parquet`;
       const checkpointKey = `${prefix}${checkpointFileName}`;
       try {
@@ -241,7 +240,6 @@ export const getCommitSchema = async (req: Request, res: Response) => {
           Key: checkpointKey,
         });
         await s3Client.send(checkpointCommand); // if exists, proceed
-        // Extract schema using duckdb like in checkpointController
         const checkpointS3Path = `s3://${bucket}/${prefix}${checkpointFileName}`;
         const result = await connection.run(`SELECT * FROM read_parquet('${checkpointS3Path}');`);
         const rowsData = await result.getRowsJson() as any[];
@@ -257,12 +255,12 @@ export const getCommitSchema = async (req: Request, res: Response) => {
           throw new Error("schemaString not found in checkpoint row");
         }
         const parsedSchema = JSON.parse(metaObj.schemaString);
-        return res.json(parsedSchema);
+        res.json(parsedSchema);
+        return;
       } catch (checkpointErr) {
         console.warn(`No checkpoint file found for ${checkpointFileName}:`, checkpointErr);
       }
 
-      // fallback to commit file
       const commitFileName = `${currentCommit.toString().padStart(20, "0")}.json`;
       const commitKey = `${prefix}${commitFileName}`;
       try {
@@ -287,7 +285,8 @@ export const getCommitSchema = async (req: Request, res: Response) => {
           const obj = JSON.parse(json);
           if (obj.metaData) {
             const parsedSchema = JSON.parse(obj.metaData.schemaString);
-            return res.json(parsedSchema);
+            res.json(parsedSchema);
+            return;
           }
         }
       } catch (commitErr) {
