@@ -38,7 +38,7 @@ export const smallFiles = async (req: Request, res: Response) => {
 			.filter(obj => {
 				if (!obj.Key || obj.Size === undefined) return false;
 				const relativeKey = obj.Key.substring(basePrefix.length);
-				if (!obj.Key.endsWith("snappy.parquet")) return false;
+				// if (!obj.Key.endsWith("snappy.parquet")) return false;
 				if (relativeKey.startsWith("_delta_log/")) return false;
 				if (obj.Size >= maxSize) return false;
 				const depth = relativeKey.split("/").length - 1;
@@ -88,7 +88,7 @@ export const getSnapshots = async (req: Request, res: Response) => {
 			.filter(obj => {
 				if (!obj.Key || obj.Size === undefined) return false;
 				const relativeKey = obj.Key.substring(basePrefix.length);
-				if (!obj.Key.endsWith("snappy.parquet")) return false;
+				// if (!obj.Key.endsWith("snappy.parquet")) return false;
 				if (relativeKey.startsWith("_delta_log/")) return false;
 				const depth = relativeKey.split("/").length - 1;
 				return depth <= 1 && relativeKey !== "";

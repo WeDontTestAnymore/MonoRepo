@@ -122,10 +122,47 @@ try {
   }
 };
 
+export const smallFilesCSV = async (req: Request, res: Response) => {
+  try {
+    const deltaDirectory = req.body.deltaDirectory;
+    if (!deltaDirectory) {
+      res.status(400).send({ message: "deltaDirectory is required" });
+      return;
+    }
+    const response = await axios.post(`${config.DELTA_SERVICE_URL}/smallFiles`, {
+      accessKey: req.awsAccessKeyId,
+      secretKey: req.awsSecretAccessKey,
+      region: req.awsRegion,
+      endpoint: req.awsEndpoint,
+      urlStyle: "path",
+      deltaDirectory,
+    });
+    const files = response.data.files;
+    if (!files || !Array.isArray(files)) {
+      res.status(500).send({ message: "Invalid data format received" });
+      return;
+    }
+    const csvHeaders = "path,sizeKB";
+    const csvRows = files.map((file: any) => `${file.path},${file.sizeKB}`);
+    const csvContent = [csvHeaders, ...csvRows].join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=smallFiles.csv");
+    res.send(csvContent);
+  } catch (err: any) {
+    logger.error(err);
+    if (err.response) {
+      res.status(err.response.status).send(err.response.data);
+      return;
+    }
+    res.status(500).send({ message: "Internal Server Error" });
+    return;
+  }
+};
+
 export const snapshots = async (req: Request, res: Response) => {
 try {
     const deltaDirectory = req.body.deltaDirectory;
-    const commitName = req.body.commitName;
     if (!deltaDirectory) {
       res.status(400).send({ message: "deltaDirectory is required" });
       return;
