@@ -93,6 +93,43 @@ try {
   }
 };
 
+
+export const getCheckpointSchema = async (req: Request, res: Response) => {
+try {
+    const deltaDirectory = req.body.deltaDirectory;
+    let filePath  = req.body.filePath; 
+    if (!deltaDirectory) {
+      res.status(400).send({ message: "deltaDirectory is required" });
+      return;
+    }
+    if (!filePath) {
+      res.status(400).send({ message: "commitName is required" });
+      return;
+    }
+    filePath = filePath.startsWith("s3://") ? filePath : "s3://" + filePath;
+    const response = await axios.post(`${config.DELTA_SERVICE_URL}/checkpointSchema`, {
+      accessKey: req.awsAccessKeyId,
+      secretKey: req.awsSecretAccessKey,
+      region: req.awsRegion,
+      endpoint: req.awsEndpoint,
+      urlStyle: "path",
+      deltaDirectory,
+      filePath
+    });
+    res.json(response.data);
+  } catch (err: any) {
+    logger.error(err);
+    if (err.response) {
+      res.status(err.response.status).send(err.response.data);
+      return;
+    }
+    res.status(500).send({ message: "Internal Server Error" });
+    return;
+  }
+};
+
+
+
 export const smallFiles = async (req: Request, res: Response) => {
 try {
     const deltaDirectory = req.body.deltaDirectory;
@@ -175,6 +212,36 @@ try {
       endpoint: req.awsEndpoint,
       urlStyle: "path",
       deltaDirectory
+    });
+    res.json(response.data);
+  } catch (err: any) {
+    logger.error(err);
+    if (err.response) {
+      res.status(err.response.status).send(err.response.data);
+      return;
+    }
+    res.status(500).send({ message: "Internal Server Error" });
+    return;
+  }
+};
+
+export const sampleData = async (req: Request, res: Response) => {
+try {
+    let filePath = req.body.filePath; 
+    const limit = req.body.limit;
+    if (!filePath) {
+      res.status(400).send({ message: "filePath is required" });
+      return;
+    }
+    filePath = filePath.startsWith("s3://") ? filePath : "s3://" + filePath;
+    const response = await axios.post(`${config.DELTA_SERVICE_URL}/sampleData`, {
+      accessKey: req.awsAccessKeyId,
+      secretKey: req.awsSecretAccessKey,
+      region: req.awsRegion,
+      endpoint: req.awsEndpoint,
+      urlStyle: "path",
+      filePath,
+      limit
     });
     res.json(response.data);
   } catch (err: any) {
