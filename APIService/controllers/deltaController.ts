@@ -147,11 +147,15 @@ try {
       urlStyle: "path",
       deltaDirectory
     });
-    res.json(response.data);
+    // res.json(response.data);
+    res.json({ noOfFiles: response.data.files.length || 0 });
+
   } catch (err: any) {
     logger.error(err);
     if (err.response) {
       res.status(err.response.status).send(err.response.data);
+
+
       return;
     }
     res.status(500).send({ message: "Internal Server Error" });

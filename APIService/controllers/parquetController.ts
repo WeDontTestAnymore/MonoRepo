@@ -10,6 +10,10 @@ export const getSchema = async (req: Request, res: Response) => {
       res.status(400).send({ message: "Invalid request body" });
       return;
     }
+    if(!req.awsEndpoint){
+      res.send(400).send({ message: "Missing Endpoint" });
+      return;
+    }
 
     const parquetPath = req.body.parquetPath;
     if (!parquetPath) {
@@ -65,6 +69,10 @@ export const getStats = async (req: Request, res: Response) => {
     logger.info(`BODY:${req.body}`);
     if (!req.body || typeof req.body !== "object") {
       res.status(400).send({ message: "Invalid request body" });
+      return;
+    }
+    if(!req.awsEndpoint){
+      res.send(400).send({ message: "Missing Endpoint" });
       return;
     }
 

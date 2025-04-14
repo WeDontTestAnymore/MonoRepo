@@ -1,6 +1,19 @@
 import type { Request, Response } from "express";
-import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 import { connection } from "../db/duck";
+
+interface CheckpointRequest {
+  accessKey: string;
+  secretKey: string;
+  region: string;
+  endpoint: string;
+  urlStyle?: string;
+  filePath: string;
+}
 
 interface ICommitsRequest {
   accessKey: string;
@@ -69,8 +82,8 @@ export const getCommits = async (req: Request, res: Response) => {
         secretAccessKey: body.secretKey,
       },
       region: body.region,
-      endpoint: body.endpoint, 
-      forcePathStyle: true,    
+      endpoint: body.endpoint,
+      forcePathStyle: true,
     });
 
     const deltaPath = body.deltaDirectory.replace("s3://", "");
@@ -87,8 +100,9 @@ export const getCommits = async (req: Request, res: Response) => {
     const response = await s3Client.send(command);
 
     const commitFiles =
-      response.Contents?.filter((obj) => obj.Key?.endsWith(".json"))
-        .map((obj) => obj.Key?.split("/").pop() || "") || [];
+      response.Contents?.filter((obj) => obj.Key?.endsWith(".json")).map(
+        (obj) => obj.Key?.split("/").pop() || "",
+      ) || [];
 
     const lastCommit = commitFiles
       .map((fileName) => fileName.match(/(\d+)\.json$/)?.[1])
@@ -97,12 +111,16 @@ export const getCommits = async (req: Request, res: Response) => {
       .sort((a, b) => b - a)[0];
 
     const checkpointFiles =
-      response.Contents?.filter((obj) => obj.Key?.endsWith(".checkpoint.parquet"))
-        .map((obj) => obj.Key?.split("/").pop() || "") || [];
+      response.Contents?.filter((obj) =>
+        obj.Key?.endsWith(".checkpoint.parquet"),
+      ).map((obj) => obj.Key?.split("/").pop() || "") || [];
 
     res.json({
       success: true,
-      lastCommit: lastCommit !== undefined ? `${lastCommit.toString().padStart(20, '0')}.json` : null,
+      lastCommit:
+        lastCommit !== undefined
+          ? `${lastCommit.toString().padStart(20, "0")}.json`
+          : null,
       checkpointFiles,
     });
   } catch (err) {
@@ -143,13 +161,15 @@ export const commitDetails = async (req: Request, res: Response) => {
         const chunks: Buffer[] = [];
         stream.on("data", (chunk: Buffer) => chunks.push(chunk));
         stream.on("error", reject);
-        stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+        stream.on("end", () =>
+          resolve(Buffer.concat(chunks).toString("utf-8")),
+        );
       });
     };
 
     const fileContent = await streamToString(s3Response.Body);
     const jsonObjects = fileContent.match(/{[\s\S]*?}(?=\s*{|\s*$)/g) || [];
-    
+
     let commitInfo: any = null;
     const changes: Change[] = [];
     for (const json of jsonObjects) {
@@ -212,7 +232,41 @@ export const commitDetails = async (req: Request, res: Response) => {
 
 export const getCommitSchema = async (req: Request, res: Response) => {
   try {
-    const body = req.body as { commitName: string; accessKey: string; secretKey: string; region: string; endpoint: string; deltaDirectory: string };
+    let {
+      accessKey,
+      secretKey,
+      region,
+      endpoint,
+      urlStyle = "path",
+      filePath,
+    } = req.body as CheckpointRequest;
+
+    const useSSL = endpoint.startsWith("https://");
+    endpoint = endpoint.replace(/\/$/, "");
+    endpoint = endpoint.replace("http://", "");
+    endpoint = endpoint.replace("https://", "");
+    await connection.run(
+      `
+CREATE OR REPLACE SECRET secret (
+            TYPE s3,
+            KEY_ID '${accessKey}',
+            SECRET '${secretKey}',
+            REGION '${region}',
+            ENDPOINT '${endpoint}',
+            URL_STYLE '${urlStyle}',
+            USE_SSL '${useSSL}'
+        );
+`,
+    );
+
+    const body = req.body as {
+      commitName: string;
+      accessKey: string;
+      secretKey: string;
+      region: string;
+      endpoint: string;
+      deltaDirectory: string;
+    };
     const s3Client = new S3Client({
       credentials: {
         accessKeyId: body.accessKey,
@@ -239,18 +293,24 @@ export const getCommitSchema = async (req: Request, res: Response) => {
           Bucket: bucket,
           Key: checkpointKey,
         });
-        await s3Client.send(checkpointCommand); // if exists, proceed
+        await s3Client.send(checkpointCommand);
         const checkpointS3Path = `s3://${bucket}/${prefix}${checkpointFileName}`;
-        const result = await connection.run(`SELECT * FROM read_parquet('${checkpointS3Path}');`);
-        const rowsData = await result.getRowsJson() as any[];
+        const result = await connection.run(
+          `SELECT * FROM read_parquet('${checkpointS3Path}');`,
+        );
+        const rowsData = (await result.getRowsJson()) as any[];
         if (!rowsData || rowsData.length < 2) {
-          throw new Error("Insufficient rows to extract schema from checkpoint");
+          throw new Error(
+            "Insufficient rows to extract schema from checkpoint",
+          );
         }
         const checkpointRow = rowsData[rowsData.length - 2];
         if (!checkpointRow) {
           throw new Error("Checkpoint row is undefined");
         }
-        const metaObj = checkpointRow.find((item: any) => item && item.schemaString);
+        const metaObj = checkpointRow.find(
+          (item: any) => item && item.schemaString,
+        );
         if (!metaObj) {
           throw new Error("schemaString not found in checkpoint row");
         }
@@ -258,7 +318,10 @@ export const getCommitSchema = async (req: Request, res: Response) => {
         res.json(parsedSchema);
         return;
       } catch (checkpointErr) {
-        console.warn(`No checkpoint file found for ${checkpointFileName}:`, checkpointErr);
+        console.warn(
+          `No checkpoint file found for ${checkpointFileName}:`,
+          checkpointErr,
+        );
       }
 
       const commitFileName = `${currentCommit.toString().padStart(20, "0")}.json`;
@@ -275,7 +338,9 @@ export const getCommitSchema = async (req: Request, res: Response) => {
             const chunks: Buffer[] = [];
             stream.on("data", (chunk: Buffer) => chunks.push(chunk));
             stream.on("error", reject);
-            stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+            stream.on("end", () =>
+              resolve(Buffer.concat(chunks).toString("utf-8")),
+            );
           });
         };
 
@@ -290,14 +355,18 @@ export const getCommitSchema = async (req: Request, res: Response) => {
           }
         }
       } catch (commitErr) {
-        console.warn(`Error fetching commit file ${commitFileName}:`, commitErr);
+        console.warn(
+          `Error fetching commit file ${commitFileName}:`,
+          commitErr,
+        );
       }
       currentCommit = currentCommit > 0n ? currentCommit - 1n : 0n;
     }
     res.status(404).json({ error: "Schema not found" });
   } catch (err) {
     console.error("Error in getCommitSchema:", err);
-    res.status(500).json({ error: err instanceof Error ? err.message : "Unknown error occurred" });
+    res.status(500).json({
+      error: err instanceof Error ? err.message : "Unknown error occurred",
+    });
   }
 };
-

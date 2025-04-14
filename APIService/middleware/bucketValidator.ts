@@ -34,6 +34,9 @@ const bucketValidator : RequestHandler = async (req: Request, res: Response, nex
         forcePathStyle: true, 
       });
     } else if (bucket_type === BucketType.AWS) {
+
+      console.log('HERE');
+
       endpoint = `https://s3-${bucket_region}.amazonaws.com`;
       s3Client = new S3Client({
         endpoint,

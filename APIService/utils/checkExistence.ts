@@ -9,12 +9,16 @@ export async function checkDirExistence(bucketName: string, credentials: { acces
 			effectiveBucket = s3Parts[0];
 			cleanedPath = s3Parts.slice(1).join('/');
 		}
+	} else {
+		if (path.startsWith(bucketName + '/')) {
+			cleanedPath = path.substring(bucketName.length + 1);
+		}
 	}
 	cleanedPath = cleanedPath.replace("s3://", "").trim();
 	if (!cleanedPath.endsWith('/')) {
 		cleanedPath += '/';
 	}
-	console.log(`Checking directory existence in bucket: ${effectiveBucket} with prefix: ${cleanedPath}`);
+	// console.log(`existence in bucket: ${effectiveBucket} with prefix: ${cleanedPath}`);
 	const s3Client = new S3Client({
 		credentials: {
 			accessKeyId: credentials.accessKeyId,
@@ -43,9 +47,7 @@ export async function checkDirExistence(bucketName: string, credentials: { acces
 	}
 }
 
-// Checks if a file exists in an S3 bucket.
 export async function checkFileExistence(bucketName: string, credentials: { accessKeyId: string; secretAccessKey: string; region: string; endpoint?: string }, path: string): Promise<boolean> {
-	// Normalize bucket and path
 	let effectiveBucket = bucketName;
 	let cleanedPath = path;
 	if (path.startsWith('s3://')) {
@@ -54,9 +56,13 @@ export async function checkFileExistence(bucketName: string, credentials: { acce
 			effectiveBucket = s3Parts[0];
 			cleanedPath = s3Parts.slice(1).join('/');
 		}
+	} else {
+		if (path.startsWith(bucketName + '/')) {
+			cleanedPath = path.substring(bucketName.length + 1);
+		}
 	}
 	cleanedPath = cleanedPath.replace("s3://", "").trim();
-	console.log(`Checking file existence in bucket: ${effectiveBucket} for key: ${cleanedPath}`);
+	// console.log(`Checking file existence in bucket: ${effectiveBucket} for key: ${cleanedPath}`);
 	const s3Client = new S3Client({
 		credentials: {
 			accessKeyId: credentials.accessKeyId,
