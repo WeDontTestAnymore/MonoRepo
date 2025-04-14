@@ -26,7 +26,6 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
   const tableCred = useSelector(
     (state: RootState) => state.tableCred.tableCred
   );
-  const basePath = useSelector((state: RootState) => state.tableCred.basePath);
 
   const fetchParquetInfo = async () => {
     setLoading(true);
@@ -39,7 +38,7 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
         return;
       }
 
-      const parquetPath = `${basePath}/${selectedTable}`;
+      const parquetPath = `${selectedTable}`;
       console.log("Fetching Parquet Data for:", parquetPath);
 
       const schemaResponse = await apiClient.post("/parquet/schema", {
@@ -158,8 +157,6 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
               <TableRow className="bg-gray-100">
                 <TableHead>Column ID</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Min</TableHead>
-                <TableHead>Max</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -167,8 +164,6 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
                 <TableRow key={index} className="hover:bg-gray-50">
                   <TableCell>{stat.column_id}</TableCell>
                   <TableCell>{stat.type}</TableCell>
-                  <TableCell>{stat.stats_min || "N/A"}</TableCell>
-                  <TableCell>{stat.stats_max || "N/A"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
