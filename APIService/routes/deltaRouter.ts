@@ -10,6 +10,7 @@ import {
   smallFilesCSV,
   getCheckpointSchema,
   sampleData,
+  snapshotSizes,
 } from "../controllers/deltaController";
 import { 
 	deltaDirectoryValidator, 
@@ -24,6 +25,7 @@ deltaRouter.post("/commitSchema", authMiddleware, deltaDirectoryValidator, getCo
 deltaRouter.post("/smallFiles", authMiddleware, deltaDirectoryValidator, smallFiles);
 deltaRouter.post("/smallFilesCSV", authMiddleware, deltaDirectoryValidator, smallFilesCSV);
 deltaRouter.post("/snapshots", authMiddleware, deltaDirectoryValidator, snapshots);
+deltaRouter.post("/snapshotSize", authMiddleware, deltaDirectoryValidator, snapshotSizes);
 
 deltaRouter.post("/details", authMiddleware, commitFileValidator, commitDetails);
 

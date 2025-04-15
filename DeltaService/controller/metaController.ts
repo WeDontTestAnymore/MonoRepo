@@ -315,7 +315,7 @@ CREATE OR REPLACE SECRET secret (
           throw new Error("schemaString not found in checkpoint row");
         }
         const parsedSchema = JSON.parse(metaObj.schemaString);
-        res.json(parsedSchema);
+        res.json({ schema: parsedSchema });
         return;
       } catch (checkpointErr) {
         console.warn(
@@ -350,7 +350,7 @@ CREATE OR REPLACE SECRET secret (
           const obj = JSON.parse(json);
           if (obj.metaData) {
             const parsedSchema = JSON.parse(obj.metaData.schemaString);
-            res.json(parsedSchema);
+            res.json({ schema: parsedSchema });
             return;
           }
         }

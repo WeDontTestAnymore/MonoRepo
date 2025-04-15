@@ -18,10 +18,14 @@ export async function deltaDirectoryValidator(req: Request, res: Response, next:
 		res.status(400).json({ error: 'Missing required AWS credentials' });
 		return;
 	}
-	const { deltaDirectory } = req.body;
+	let { deltaDirectory } = req.body;
 	if (!deltaDirectory) { 
 		res.status(400).json({ error: 'deltaDirectory is required' });
 		return;
+	}
+	if (deltaDirectory.startsWith("s3://")) {
+		deltaDirectory = deltaDirectory.slice(5);
+		req.body.deltaDirectory = deltaDirectory;
 	}
 	try {
 		const bucketName = req.awsBucketName as string;
@@ -55,11 +59,17 @@ export async function commitFileValidator(req: Request, res: Response, next: Nex
 		res.status(400).json({ error: 'Missing required AWS credentials' });
 		return;
 	}
-	const { commitFilePath } = req.body;
+	let { commitFilePath } = req.body;
 	if (!commitFilePath) { 
 		res.status(400).json({ error: 'commitFilePath is required' });
 		return;
 	}
+	if (commitFilePath.startsWith("s3://")) {
+		commitFilePath = commitFilePath.slice(5);
+		req.body.commitFilePath = commitFilePath;
+	}
+
+	console.log("COMMIT FILE PATH: ", commitFilePath);
 	try {
 		const bucketName = req.awsBucketName as string;
 		const credentials: Credentials = {
@@ -91,8 +101,8 @@ export async function filePathValidator(req: Request, res: Response, next: NextF
 		res.status(400).json({ error: 'filePath is required' });
 		return;
 	}
-	if (!filePath.startsWith("s3://")) {
-		filePath = "s3://" + filePath;
+	if (filePath.startsWith("s3://")) {
+		filePath = filePath.slice(5);
 		req.body.filePath = filePath;
 	}
 	try {
