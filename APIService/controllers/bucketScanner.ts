@@ -3,8 +3,11 @@ import {
   S3Client,
   ListObjectsV2Command,
   type ListObjectsV2CommandInput,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import cfg from "../utils/config";
+import { promises as fs } from "fs";
+import path from "path";
 
 interface ScanConfig {
   maxDepth: number;
@@ -16,6 +19,7 @@ interface TableLocation {
   type: "ICEBERG" | "DELTA" | "HOODIE";
   path: string;
 }
+
 
 /**
  * Uses the scanBucket func to recursively scan the bucket for iceberg and delta tables
@@ -44,10 +48,6 @@ export const BucketScanner = async (req: Request, res: Response) => {
 
     const tables = await scanBucket(s3Client, config);
 
-    // const updatedTables = tables.map((table) => ({
-    //   ...table,
-    //   path: `s3://${config.bucket}/${table.path}`,
-    // }));
     res.json({ tables, basePath: `s3://${config.bucket}` });
     return;
   } catch (err) {
@@ -160,3 +160,134 @@ async function scanBucket(
   }
   return tables;
 }
+
+async function isParquetFile(filePath: string): Promise<boolean> {
+  try {
+    const buffer = await fs.readFile(filePath, { flag: 'r' });
+    // Check for PAR1 magic number at the start of the file
+    return buffer.slice(0, 4).toString() === 'PAR1';
+  } catch (error) {
+    console.error(`Error reading file ${filePath}:`, error);
+    return false;
+  }
+}
+
+async function isS3ParquetFile(
+  s3Client: S3Client,
+  bucket: string,
+  key: string
+): Promise<boolean> {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Range: 'bytes=0-3' // Only get first 4 bytes
+    });
+    const response = await s3Client.send(command);
+    const chunk = await response.Body?.transformToByteArray();
+    return chunk ? Buffer.from(chunk).toString() === 'PAR1' : false;
+  } catch (error) {
+    console.error(`Error checking S3 file ${key}:`, error);
+    return false;
+  }
+}
+
+async function scanDirectory(dir: string): Promise<string[]> {
+  let results: string[] = [];
+  const list = await fs.readdir(dir, { withFileTypes: true });
+  for (const dirent of list) {
+    const fullPath = path.join(dir, dirent.name);
+    if (dirent.isDirectory()) {
+      const subFiles = await scanDirectory(fullPath);
+      results = results.concat(subFiles);
+    } else if (await isParquetFile(fullPath)) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
+export const ParquetScanner = async (req: Request, res: Response) => {
+  try {
+    const directory = req.body.directory;
+    if (!directory) {
+      res.status(400).send({ message: "Directory not specified" });
+      return;
+    }
+    const files = await scanDirectory(directory);
+    res.json({ files });
+  } catch (error) {
+    console.error("Error scanning directory:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
+
+async function scanS3ForParquet(
+  s3Client: S3Client,
+  bucket: string,
+  prefix: string
+): Promise<string[]> {
+  const parquetFiles: string[] = [];
+  const prefixStack = [prefix];
+
+  while (prefixStack.length > 0) {
+    const currentPrefix = prefixStack.pop()!;
+    const params: ListObjectsV2CommandInput = {
+      Bucket: bucket,
+      Prefix: currentPrefix,
+      Delimiter: "/",
+    };
+
+    try {
+      const response = await s3Client.send(new ListObjectsV2Command(params));
+      
+      response.CommonPrefixes?.forEach((p) => {
+        if (p.Prefix) prefixStack.push(p.Prefix);
+      });
+
+      for (const content of response.Contents || []) {
+        if (content.Key && await isS3ParquetFile(s3Client, bucket, content.Key)) {
+          parquetFiles.push(content.Key);
+        }
+      }
+    } catch (error) {
+      console.error(`Error scanning prefix ${currentPrefix}:`, error);
+    }
+  }
+  return parquetFiles;
+}
+
+export const S3ParquetScanner = async (req: Request, res: Response) => {
+  try {
+    const s3Path = req.body.directoryPath;
+    if (!s3Path) {
+      res.status(400).send({ message: "S3 path not specified" });
+      return;
+    }
+
+    const endpoint = req.awsEndpoint?.startsWith("http")
+      ? req.awsEndpoint
+      : `https://${req.awsEndpoint}`;
+
+    const s3Client = new S3Client({
+      credentials: {
+        accessKeyId: req.awsAccessKeyId!,
+        secretAccessKey: req.awsSecretAccessKey!,
+      },
+      endpoint,
+      region: req.awsRegion,
+      forcePathStyle: true,
+    });
+
+    const cleanPath = s3Path.replace(/^s3:\/\/[^/]+\//, '');
+    const files = await scanS3ForParquet(s3Client, req.awsBucketName!, cleanPath);
+    
+    res.json({ 
+      files,
+      basePath: `s3://${req.awsBucketName}`
+    });
+  } catch (error) {
+    console.error("Error scanning S3:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
