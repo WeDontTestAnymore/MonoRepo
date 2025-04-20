@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileDiff } from "lucide-react";
+import { FileDiff, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 interface DeltaVersioningProps {
   selectedTable: string;
@@ -36,6 +36,10 @@ const DeltaVersioning = ({ selectedTable }: DeltaVersioningProps) => {
   const [checkpoints, setCheckpoints] = useState<string[]>([]);
   const [deltaDirectory, setDeltaDirectory] = useState("");
   const [commits, setCommits] = useState<string[]>([]);
+
+  const [commitLogData, setCommitLogData] = useState<
+    { commit: string; additions: number; deletions: number }[]
+  >([]);
 
   const [mode1, setMode1] = useState<"commit" | "checkpoint">("commit");
   const [mode2, setMode2] = useState<"commit" | "checkpoint">("commit");
@@ -125,6 +129,31 @@ const DeltaVersioning = ({ selectedTable }: DeltaVersioningProps) => {
       setLoading(false);
     }
   };
+
+  const fetchTableChanges = async (selectedTable: string) => {
+    setLoading(true);
+    try {
+      const reqPath = `${basePath}/${selectedTable}`;
+      const tableChangesResponse = await apiClient.post("/delta/commitLog", {
+        deltaDirectory: reqPath,
+      });
+      console.log(
+        "🚀 ~ fetchTableChanges ~ tableChangesResponse:",
+        tableChangesResponse.data
+      );
+      setCommitLogData(tableChangesResponse.data.stats);
+    } catch (error) {
+      toast.error("Failed to fetch table changes");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedTable) {
+      fetchTableChanges(selectedTable);
+    }
+  }, [selectedTable]);
 
   useEffect(() => {
     if (selectedTable) fetchCommits(selectedTable);
@@ -351,6 +380,36 @@ const DeltaVersioning = ({ selectedTable }: DeltaVersioningProps) => {
               No changes detected.
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="bg-white shadow-md rounded-lg p-4 mt-6">
+        <h3 className="text-lg font-semibold mb-3">Commit History</h3>
+        <div className="overflow-x-auto">
+          <table className="table-auto w-full text-sm text-left text-gray-700">
+            <thead className="bg-gray-200 text-xs uppercase font-semibold text-gray-600">
+              <tr>
+                <th className="px-4 py-2">Commit</th>
+                <th className="px-4 py-2">Additions</th>
+                <th className="px-4 py-2">Deletions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {commitLogData.map((entry) => (
+                <tr key={entry.commit}>
+                  <td className="px-4 py-2 font-mono">{entry.commit}</td>
+                  <td className="px-4 py-2 text-green-600 font-semibold">
+                    {entry.additions}
+                    <ArrowUpRight className="inline-block ml-1" size={14} />
+                  </td>
+                  <td className="px-4 py-2 text-red-600 font-semibold">
+                    {entry.deletions}
+                    <ArrowDownRight className="inline-block ml-1" size={14} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
