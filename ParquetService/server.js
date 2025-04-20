@@ -36,7 +36,7 @@ app.post("/schema/show", async (req, res) => {
       `Initialized DuckDB S3 with key: ${config.access_key}, secret: ${config.secret_key}, region: ${config.region}`,
     );
 
-    const query = `DESCRIBE SELECT * FROM '${parquetPath}';`;
+    const query = `DESCRIBE SELECT * FROM read_parquet('${parquetPath}');`;
     console.log("Query:", query);
 
     const result = await connection.runAndReadAll(query);
