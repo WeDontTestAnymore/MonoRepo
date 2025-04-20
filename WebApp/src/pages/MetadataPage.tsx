@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/Metadata/Sidebar";
 import QueryBuilder from "@/components/Metadata/QueryBuilder";
 import SchemaViewer from "@/components/Metadata/SchemaViewer";
-import { Toaster } from "sonner";
+import { toast, Toaster } from "sonner";
 import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
 import apiClient from "@/services/axios.config";
@@ -12,6 +12,7 @@ import {
   setTableCred,
   setBasePath,
   addTableCred,
+  TableTypes,
 } from "@/contexts/tableCred.slice";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -36,7 +37,6 @@ import IcebergTableProperties from "@/components/Metadata/Iceberg/IcebergTablePr
 import IcebergVersioning from "@/components/Metadata/Iceberg/IcebergVersioning";
 import IcerbergKeyMetrics from "@/components/Metadata/Iceberg/IcerbergKeyMetrics";
 import ParquetInfo from "@/components/Metadata/Parquet/ParuqetInfo";
-import { TableTypes } from "@/contexts/tableCred.slice";
 
 const MetadataPage = () => {
   const [availableTables, setAvailableTables] = useState<string[]>([]);
@@ -104,29 +104,34 @@ const MetadataPage = () => {
   }, [tableCredentials, dispatch]);
 
   const handleDiscoverPath = async () => {
-    // try {
-    //   const response = await apiClient.post("/discover/path", {
-    //     path: newPath.replace(/\/$/, ""), // Remove trailing slash
-    //     type: tableType,
-    //   });
+    try {
+      const parquetFilesResponse = await apiClient.post("/bucket/scanParquet", {
+        directoryPath: newPath,
+      });
 
-    //   if (response.status === 200) {
-    //     console.log("Path discovered:", response.data);
-    //     setIsDialogOpen(false);
-    //   } else {
-    //     console.error("Failed to discover path.");
-    //   }
-    // } catch (error) {
-    //   console.error("Error discovering path:", error);
-    // }
+      if (parquetFilesResponse.status === 200) {
+        const parquetFiles = parquetFilesResponse.data.files;
+        console.log("🚀 ~ parquetFilesResponse ~ parquetFiles:", parquetFiles);
 
-    console.log("New Path:", newPath);
-    console.log("Table Type:", selectedTable);
-
-    dispatch(
-      addTableCred({ path: newPath, type: selectedTableType as TableTypes })
-    );
-    setIsDialogOpen(false);
+        if (parquetFiles.length > 0) {
+          for (const file of parquetFiles) {
+            const newTableCred = {
+              path: file,
+              type: selectedTable as TableTypes,
+            };
+            dispatch(addTableCred(newTableCred));
+          }
+        } else {
+          toast.warning("No parquet files found in the response.");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error discovering new path:", error);
+      toast.error("Error discovering new path: " + error.message);
+    } finally {
+      setIsDialogOpen(false);
+      setNewPath("");
+    }
   };
 
   const getTableType = (selectedTable: string) => {
@@ -141,7 +146,6 @@ const MetadataPage = () => {
     if (selectedTable) {
       const type = getTableType(selectedTable);
       setTableType(type);
-      console.log("🚀 ~ useEffect ~ tableType:", type);
     }
   }, [selectedTable]);
 

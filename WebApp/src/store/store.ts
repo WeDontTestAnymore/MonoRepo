@@ -3,6 +3,7 @@ import authReducer from "../contexts/auth.slice";
 import themeReducer from "../contexts/theme.slice";
 import tableCredReducer from "../contexts/tableCred.slice";
 import deltaReducer from "../contexts/delta.slice";
+import parquetReducer from "../contexts/parquet.slice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     theme: themeReducer,
     tableCred: tableCredReducer,
     delta: deltaReducer,
+    parquet: parquetReducer,
   },
 });
 

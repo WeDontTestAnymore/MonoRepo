@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FileDiff } from "lucide-react";
 
 interface DeltaVersioningProps {
   selectedTable: string;
@@ -113,7 +114,10 @@ const DeltaVersioning = ({ selectedTable }: DeltaVersioningProps) => {
         });
       }
       console.log(`Schema ::: ${identifier}`);
-      console.log("🚀 ~ fetchSchemaFromMode ~ schemaResponse:", schemaResponse.data);
+      console.log(
+        "🚀 ~ fetchSchemaFromMode ~ schemaResponse:",
+        schemaResponse.data
+      );
       setSchema(schemaResponse.data.schema);
     } catch (error) {
       toast.error("Failed to fetch schema");
@@ -141,16 +145,23 @@ const DeltaVersioning = ({ selectedTable }: DeltaVersioningProps) => {
     const fields1 = schema1?.fields || schema1?.schema?.fields || [];
     const fields2 = schema2?.fields || schema2?.schema?.fields || [];
     const allFieldNames = Array.from(
-      new Set([...fields1.map((f: any) => f.name), ...fields2.map((f: any) => f.name)])
+      new Set([
+        ...fields1.map((f: any) => f.name),
+        ...fields2.map((f: any) => f.name),
+      ])
     );
     return allFieldNames.map((fieldName) => {
       const f1 = fields1.find((f: any) => f.name === fieldName);
       const f2 = fields2.find((f: any) => f.name === fieldName);
-      if (!f1) return { field: fieldName, status: 'added', type: f2.type };
-      if (!f2) return { field: fieldName, status: 'removed', type: f1.type };
+      if (!f1) return { field: fieldName, status: "added", type: f2.type };
+      if (!f2) return { field: fieldName, status: "removed", type: f1.type };
       if (f1.type !== f2.type)
-        return { field: fieldName, status: 'modified', type: `${f1.type} → ${f2.type}` };
-      return { field: fieldName, status: 'unchanged', type: f1.type };
+        return {
+          field: fieldName,
+          status: "modified",
+          type: `${f1.type} → ${f2.type}`,
+        };
+      return { field: fieldName, status: "unchanged", type: f1.type };
     });
   };
 
@@ -178,8 +189,10 @@ const DeltaVersioning = ({ selectedTable }: DeltaVersioningProps) => {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      <h2 className="text-2xl mb-4 font-semibold">{`Delta Version: ${selectedTable}`}</h2>
-
+      <h2 className="text-3xl mb-6 flex items-center gap-2">
+        <FileDiff className="w-8 h-8 text-blue-500" /> Delta Versioning:{" "}
+        {selectedTable}
+      </h2>
       <div className="grid grid-cols-2 gap-8 mb-6">
         <div>
           <h3 className="font-semibold mb-2">Schema 1 Source</h3>
@@ -208,7 +221,9 @@ const DeltaVersioning = ({ selectedTable }: DeltaVersioningProps) => {
                 className="w-full"
                 value={commitInput1}
                 onChange={(e) => setCommitInput1(e.target.value)}
-                placeholder={`Commit (max: ${commits[commits.length - 1] || ""})`}
+                placeholder={`Commit (max: ${
+                  commits[commits.length - 1] || ""
+                })`}
               />
               <Button onClick={handleLoadSchema1} className="ml-2">
                 Load
@@ -259,7 +274,9 @@ const DeltaVersioning = ({ selectedTable }: DeltaVersioningProps) => {
                 className="w-full"
                 value={commitInput2}
                 onChange={(e) => setCommitInput2(e.target.value)}
-                placeholder={`Commit (max: ${commits[commits.length - 1] || ""})`}
+                placeholder={`Commit (max: ${
+                  commits[commits.length - 1] || ""
+                })`}
               />
               <Button onClick={handleLoadSchema2} className="ml-2">
                 Load
@@ -283,30 +300,32 @@ const DeltaVersioning = ({ selectedTable }: DeltaVersioningProps) => {
           )}
         </div>
       </div>
-
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-white shadow-md rounded-lg p-4">
           <h3 className="text-lg font-semibold mb-3">Schema 1</h3>
           <div className="border p-4 rounded-md bg-white text-black font-mono">
-            {(schema1?.fields || schema1?.schema?.fields || []).map((field: any) => (
-              <div key={field.name} className="py-1">
-                {field.name}: {field.type}
-              </div>
-            ))}
+            {(schema1?.fields || schema1?.schema?.fields || []).map(
+              (field: any) => (
+                <div key={field.name} className="py-1">
+                  {field.name}: {field.type}
+                </div>
+              )
+            )}
           </div>
         </div>
         <div className="bg-white shadow-md rounded-lg p-4">
           <h3 className="text-lg font-semibold mb-3">Schema 2</h3>
           <div className="border p-4 rounded-md bg-white text-black font-mono">
-            {(schema2?.fields || schema2?.schema?.fields || []).map((field: any) => (
-              <div key={field.name} className="py-1">
-                {field.name}: {field.type}
-              </div>
-            ))}
+            {(schema2?.fields || schema2?.schema?.fields || []).map(
+              (field: any) => (
+                <div key={field.name} className="py-1">
+                  {field.name}: {field.type}
+                </div>
+              )
+            )}
           </div>
         </div>
       </div>
-
       <div className="bg-white shadow-md rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-3">Schema Changes</h3>
         <div className="border p-4 rounded-md bg-white text-black font-mono">

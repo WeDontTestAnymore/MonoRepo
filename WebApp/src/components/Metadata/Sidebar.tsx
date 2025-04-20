@@ -1,7 +1,6 @@
 import React, { JSX } from "react";
 import { File, Folder, Tree } from "../magicui/file-tree";
 import { Link } from "react-router-dom";
-import { Database } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   LeftToRightListBulletIcon,
@@ -97,35 +96,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             },
           ],
         })),
-        {
-          id: "schema-viewer",
-          isSelectable: true,
-          name: "Schema Viewer",
-          icon: (
-            <HugeiconsIcon
-              icon={Structure03Icon}
-              className="w-5 h-5 mr-2 text-white"
-            />
-          ),
-        },
-      ],
-    },
-    {
-      id: "execute-sql",
-      isSelectable: false,
-      name: "Execute SQL",
-      icon: <Database className="w-4 h-4 mr-2 text-gray-400" />,
-      children: [
-        {
-          id: "run-sql",
-          name: "Run Query",
-          icon: (
-            <HugeiconsIcon
-              icon={CodeIcon}
-              className="w-5 h-5 mr-2 text-white"
-            />
-          ),
-        },
       ],
     },
   ];

@@ -1,12 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import apiClient from "@/services/axios.config";
 import { RootState } from "@/store/store";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandEmpty,
+} from "@/components/ui/command";
 import {
   Table,
   TableHeader,
@@ -20,7 +31,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, FilePlus, History, Table as TableIcon } from "lucide-react";
+import {
+  ChevronDown,
+  FilePlus,
+  History,
+  Table as TableIcon,
+} from "lucide-react";
 import { format } from "date-fns";
 
 interface DeltaTablePropertiesProps {
@@ -31,8 +47,30 @@ const DeltaTableProperties = ({ selectedTable }: DeltaTablePropertiesProps) => {
   const [loading, setLoading] = useState(false);
   const [commitId, setCommitId] = useState<string | null>(null);
   const [commitResponse, setCommitResponse] = useState<any[]>([]);
+  const [lastCommit, setLastCommit] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   const basePath = useSelector((state: RootState) => state.tableCred.basePath);
+
+  const fetchLastCommit = async () => {
+    setLoading(true);
+    try {
+      const trimmedBasePath =
+        basePath && basePath.startsWith("s3://")
+          ? basePath.slice(5)
+          : basePath || "";
+      const reqPath = `${trimmedBasePath}/${selectedTable}`;
+      const commitResponse = await apiClient.post("/delta/commits", {
+        deltaDirectory: reqPath,
+      });
+      console.log("🚀 ~ fetchLastCommit ~ commmitResponse:", commitResponse);
+      setLastCommit(commitResponse.data.lastCommit?.replace(".json", ""));
+    } catch (error) {
+      toast.error("Failed to fetch last commit");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchDetails = async () => {
     setLoading(true);
@@ -57,21 +95,60 @@ const DeltaTableProperties = ({ selectedTable }: DeltaTablePropertiesProps) => {
     }
   };
 
+  useEffect(() => {
+    setCommitId(null);
+    setCommitResponse([]);
+
+    if (selectedTable) {
+      fetchLastCommit();
+    }
+  }, [selectedTable]);
+
   return (
     <div className="h-full flex flex-col gap-4 p-6 bg-gray-100">
       <h2 className="text-3xl mb-2 flex items-center gap-2">
-        <History className="w-8 h-8 text-blue-500" /> Delta Commit Properties: {selectedTable}
+        <History className="w-8 h-8 text-blue-500" /> Delta Commit Properties:{" "}
+        {selectedTable}
       </h2>
 
       <div className="flex gap-2 items-center shrink-0">
-        <Input
-          type="text"
-          placeholder="Enter Commit ID"
-          value={commitId || ""}
-          onChange={(e) => setCommitId(e.target.value)}
-          className="w-[300px]"
-        />
-        <Button onClick={fetchDetails} disabled={loading}>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              className="w-[300px] justify-between"
+            >
+              {commitId || "Select Commit ID"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-0">
+            <Command>
+              <CommandInput placeholder="Search commit ID..." />
+              <CommandList>
+                <CommandEmpty>No results found.</CommandEmpty>
+                {lastCommit &&
+                  Array.from({ length: parseInt(lastCommit, 10) + 1 }, (_, i) =>
+                    i.toString().padStart(20, "0")
+                  )
+                    .reverse()
+                    .map((commit) => (
+                      <CommandItem
+                        key={commit}
+                        onSelect={() => {
+                          setCommitId(commit);
+                          setOpen(false);
+                        }}
+                      >
+                        {commit}
+                      </CommandItem>
+                    ))}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        <Button onClick={fetchDetails} disabled={loading || !commitId}>
           {loading ? "Loading..." : "Fetch Details"}
         </Button>
       </div>
@@ -79,7 +156,9 @@ const DeltaTableProperties = ({ selectedTable }: DeltaTablePropertiesProps) => {
       <div className="flex-1 min-h-0">
         <ScrollArea className="h-full rounded-md border p-4">
           {commitResponse.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No data to display.</p>
+            <p className="text-sm text-muted-foreground">
+              No data to display. Please enter a Commit ID First.
+            </p>
           ) : (
             commitResponse.map((item, idx) => {
               const isMeta = item.type === "metaData";

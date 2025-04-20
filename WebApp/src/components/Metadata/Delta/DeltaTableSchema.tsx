@@ -60,7 +60,6 @@ const DeltaTableSchema = ({ selectedTable }: DeltaTableSchemaProps) => {
       console.log("🚀 ~ fetchSchema ~ schemaResponse:", schemaResponse.data);
       setSchema(schemaResponse.data.schema.fields);
 
-
       const snapshotResponse = await apiClient.post("/delta/snapshots", {
         deltaDirectory: reqPath,
       });

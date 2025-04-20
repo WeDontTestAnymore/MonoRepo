@@ -23,6 +23,8 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
   const [rows, setRows] = useState<any[]>([]);
   const [columnStats, setColumnStats] = useState<any[]>([]);
 
+  const basePath = useSelector((state: RootState) => state.tableCred.basePath);
+
   const tableCred = useSelector(
     (state: RootState) => state.tableCred.tableCred
   );
@@ -38,7 +40,7 @@ const ParquetInfo = ({ selectedTable }: ParquetInfoProps) => {
         return;
       }
 
-      const parquetPath = `${selectedTable}`;
+      const parquetPath = `${basePath}/${selectedTable}`;
       console.log("Fetching Parquet Data for:", parquetPath);
 
       const schemaResponse = await apiClient.post("/parquet/schema", {

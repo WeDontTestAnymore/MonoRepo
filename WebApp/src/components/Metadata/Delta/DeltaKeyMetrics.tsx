@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle } from "lucide-react";
+import { AlertTriangle, TrendingUp, CheckCircle } from "lucide-react";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
@@ -223,8 +223,9 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl mb-4 font-semibold text-gray-800">
-        Delta Key Metrics: {selectedTable}
+      <h2 className="text-3xl mb-6 flex items-center gap-2">
+        <TrendingUp className="w-8 h-8 text-blue-500" /> Delta Key Metrics:{" "}
+        {selectedTable}
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 pb-4">
         <Card>
