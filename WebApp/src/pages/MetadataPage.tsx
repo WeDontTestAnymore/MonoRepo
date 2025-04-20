@@ -57,6 +57,8 @@ const MetadataPage = () => {
     (state: RootState) => state.tableCred.tableCred
   ); // ✅ Move outside
 
+  const basePath = useSelector((state: RootState) => state.tableCred.basePath); // ✅ Move outside
+
   useEffect(() => {
     const fetchTables = async () => {
       try {
@@ -64,15 +66,13 @@ const MetadataPage = () => {
         if (response.status === 200) {
           dispatch(setTableCred(response.data.tables));
 
-          // Extract base path (e.g., "s3://datalake")
-          const firstPath = response.data.tables[0]?.path || "";
-          const extractedBasePath = firstPath.split("/").slice(0, 3).join("/");
-
-          dispatch(setBasePath(extractedBasePath)); // Store base path in Redux
+          dispatch(setBasePath(response.data.basePath)); // Store base path in Redux
 
           const tableNames = response.data.tables.map((t: any) => {
-            console.log("🚀 ~ t:", t);
-            return t.path;
+            const tableName = t.path
+              .replace("s3://datalake/", "")
+              .replace(/\/$/, "");
+            return `${tableName}`;
           });
           console.log("🚀 ~ tableNames ~ tableNames:", tableNames);
 
@@ -89,10 +89,12 @@ const MetadataPage = () => {
     if (!tableCredentials) {
       fetchTables();
     } else {
+      console.log("Inside else block: ", tableCredentials);
+      console.log("Base Path: ", basePath);
       const tableNames = tableCredentials.map((t) => {
         const tableName = t.path
           .replace("s3://datalake/", "")
-          .replace(/\/$/, ""); // Remove prefix & trailing slash
+          .replace(/\/$/, "");
         return `${tableName}`;
       });
 
@@ -136,10 +138,12 @@ const MetadataPage = () => {
   };
 
   useEffect(() => {
-    const tableType = getTableType(selectedTable);
-    setTableType(tableType);
-  }),
-    [selectedTable];
+    if (selectedTable) {
+      const type = getTableType(selectedTable);
+      setTableType(type);
+      console.log("🚀 ~ useEffect ~ tableType:", type);
+    }
+  }, [selectedTable]);
 
   return (
     <div className="flex w-full h-screen bg-gray-100">
@@ -153,10 +157,11 @@ const MetadataPage = () => {
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <div className="flex-1 overflow-auto px-6 pb-6">
           <div className="p-4 shadow rounded bg-white">
-            {activeSection === "ParquetItIs" && (
+            {tableType && activeSection === "ParquetItIs" && (
               <ParquetInfo selectedTable={selectedTable} />
             )}
-            {activeSection === "Schemas" &&
+            {tableType &&
+              activeSection === "Schemas" &&
               (tableType === "DELTA" ? (
                 <DeltaTableSchema selectedTable={selectedTable} />
               ) : tableType === "HOODIE" ? (
@@ -164,7 +169,8 @@ const MetadataPage = () => {
               ) : (
                 <IcebergTableSchema selectedTable={selectedTable} />
               ))}
-            {activeSection === "Properties" &&
+            {tableType &&
+              activeSection === "Properties" &&
               (tableType === "DELTA" ? (
                 <DeltaTableProperties selectedTable={selectedTable} />
               ) : tableType === "HOODIE" ? (
@@ -172,7 +178,8 @@ const MetadataPage = () => {
               ) : (
                 <IcebergTableProperties selectedTable={selectedTable} />
               ))}
-            {activeSection === "Versioning & Snapshots" &&
+            {tableType &&
+              activeSection === "Versioning & Snapshots" &&
               (tableType === "DELTA" ? (
                 <DeltaVersioning selectedTable={selectedTable} />
               ) : tableType === "HOODIE" ? (
@@ -180,7 +187,8 @@ const MetadataPage = () => {
               ) : (
                 <IcebergVersioning selectedTable={selectedTable} />
               ))}
-            {activeSection === "Key Metrics" &&
+            {tableType &&
+              activeSection === "Key Metrics" &&
               (tableType === "DELTA" ? (
                 <DeltaKeyMetrics selectedTable={selectedTable} />
               ) : tableType === "HOODIE" ? (

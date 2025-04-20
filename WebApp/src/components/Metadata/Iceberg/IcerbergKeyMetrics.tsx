@@ -20,22 +20,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface FileData {
-  row_count: string;
-  partition: {
-    s_nationkey: string;
-  };
-  size_bytes: string;
-  file_path: string;
-}
-
 interface IcebergKeyMetricsProps {
   selectedTable: string;
 }
 
 const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
   const [loading, setLoading] = useState(false);
-  const [fileData, setFileData] = useState<FileData[]>([]);
+  const [fileData, setFileData] = useState<any[]>([]);
   const [overheadCnt, setOverheadCnt] = useState(0);
 
   const basePath = useSelector((state: RootState) => state.tableCred.basePath);
@@ -113,13 +104,33 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
     }
   };
 
-  // Transform data for the chart
-  const chartData = fileData.map((item) => ({
-    nationKey: `${item.partition.s_nationkey}`,
-    rowCount: Number.parseInt(item.row_count),
-    sizeBytes: Number.parseInt(item.size_bytes),
-    formattedSize: `${(Number.parseInt(item.size_bytes) / 1024).toFixed(2)} KB`,
-  }));
+  const chartData = fileData.map((item) => {
+    const partitionKey = item.partition
+      ? Object.keys(item.partition)[0]
+      : "partition";
+    const partitionValue = item.partition
+      ? item.partition[partitionKey]
+      : "unpartitioned";
+
+    return {
+      partitionKey,
+      partitionValue: String(partitionValue),
+      rowCount: Number.parseInt(item.row_count),
+      sizeBytes: Number.parseInt(item.size_bytes),
+      formattedSize: `${(Number.parseInt(item.size_bytes) / 1024).toFixed(
+        2
+      )} KB`,
+    };
+  });
+
+  const totalRowCount = fileData.reduce(
+    (sum, item) => sum + Number(item.row_count || 0),
+    0
+  );
+  const totalSize = fileData.reduce(
+    (sum, item) => sum + Number(item.size_bytes || 0),
+    0
+  );
 
   const chartConfig = {
     rowCount: {
@@ -137,13 +148,18 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
     fetchKeyMetrics();
   }, []);
 
+  const isUnpartitioned = fileData.length > 0 && fileData[0].partition === null;
+
   return (
     <div>
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Iceberg Table Metrics</CardTitle>
           <CardDescription>
-            {selectedTable} - Partitions by Nation Key
+            {selectedTable} -{" "}
+            {isUnpartitioned
+              ? "Unpartitioned Table"
+              : `Partitions by ${chartData[0]?.partitionKey}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -151,28 +167,48 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
             <div className="space-y-2">
               <Skeleton className="h-[300px] w-full" />
             </div>
+          ) : isUnpartitioned ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total Rows</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-semibold">{totalRowCount}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total Size</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-semibold">
+                    {(totalSize / 1024).toFixed(2)} KB
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           ) : fileData.length > 0 ? (
             <ChartContainer config={chartConfig} className="h-[300px]">
               <BarChart accessibilityLayer data={chartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
-                  dataKey="nationKey"
+                  dataKey="partitionValue"
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
                 />
                 <YAxis tickLine={false} tickMargin={10} axisLine={false} />
                 <ChartTooltip
-                  cursor={false} // Disable the gray background cursor
+                  cursor={false}
                   content={({ active, payload }) => {
                     if (active && payload && payload.length > 0) {
-                      const data = payload[0].payload; // Correctly access the payload data
-                      console.log("🚀 Tooltip Data:", data); // Debugging log
+                      const data = payload[0].payload;
                       return (
                         <ChartTooltipContent indicator="dashed">
                           <div className="space-y-2 p-2">
                             <p className="text-sm font-medium">
-                              Nation Key: {data.nationKey}
+                              {data.partitionKey}: {data.partitionValue}
                             </p>
                             <p className="text-xs">
                               Row Count: {data.rowCount}
@@ -184,7 +220,7 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
                         </ChartTooltipContent>
                       );
                     }
-                    return null; // Return null if no active tooltip
+                    return null;
                   }}
                 />
                 <Bar
@@ -201,6 +237,7 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
           )}
         </CardContent>
       </Card>
+
       {overheadCnt > 0 && (
         <div className="mt-4 flex items-center justify-between rounded-md border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-800">
           <div className="flex items-center space-x-2">

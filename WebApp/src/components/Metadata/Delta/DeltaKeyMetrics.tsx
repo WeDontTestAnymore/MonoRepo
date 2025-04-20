@@ -104,7 +104,7 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
         (acc: number, f: any) => acc + (f.sizeKB || 0),
         0
       );
-      setTotalSnapshotSizeMB((totalKB / 1024).toFixed(2));
+      setTotalSnapshotSizeMB(parseFloat((totalKB / 1024).toFixed(2)));
     } catch (error) {
       toast.error("Failed to fetch snapshot size data.");
     }
