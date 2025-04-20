@@ -7,7 +7,7 @@ import {
 } from "./controller/metaController";
 import { checkpointSchema } from "./controller/checkpointController";
 import { getSnapshots, getSnapshotSizes, smallFiles } from "./controller/listFilesController";
-import { getSampleData } from "./controller/snapshotController";
+import { getCommitStats, getSampleData } from "./controller/snapshotController";
 
 const app = express();
 app.use(express.json());
@@ -21,6 +21,7 @@ app.post("/smallFiles", smallFiles);
 app.post("/snapshots", getSnapshots);
 app.post("/snapshotSizes", getSnapshotSizes);
 app.post("/sampleData", getSampleData);
+app.post("/commitLog", getCommitStats );
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

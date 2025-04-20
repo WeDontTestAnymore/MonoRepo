@@ -11,6 +11,7 @@ import {
   getCheckpointSchema,
   sampleData,
   snapshotSizes,
+  commitLog,
 } from "../controllers/deltaController";
 import { 
 	deltaDirectoryValidator, 
@@ -22,6 +23,7 @@ const deltaRouter = Router();
 
 deltaRouter.post("/commits", authMiddleware, deltaDirectoryValidator, getCommits);
 deltaRouter.post("/commitSchema", authMiddleware, deltaDirectoryValidator, getCommitSchema);
+deltaRouter.post("/commitLog", authMiddleware, deltaDirectoryValidator, commitLog);
 deltaRouter.post("/smallFiles", authMiddleware, deltaDirectoryValidator, smallFiles);
 deltaRouter.post("/smallFilesCSV", authMiddleware, deltaDirectoryValidator, smallFilesCSV);
 deltaRouter.post("/snapshots", authMiddleware, deltaDirectoryValidator, snapshots);

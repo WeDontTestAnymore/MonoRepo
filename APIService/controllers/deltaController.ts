@@ -296,3 +296,35 @@ try {
     return;
   }
 };
+
+export const commitLog = async (req: Request, res: Response) => {
+try {
+    const deltaDirectory = req.body.deltaDirectory;
+    if (!deltaDirectory) {
+      res.status(400).send({ message: "deltaDirectory is required" });
+      return;
+    }
+
+    const response = await axios.post(`${config.DELTA_SERVICE_URL}/commitLog`, {
+      accessKey: req.awsAccessKeyId,
+      secretKey: req.awsSecretAccessKey,
+      region: req.awsRegion,
+      endpoint: req.awsEndpoint,
+      urlStyle: "path",
+      deltaDirectory
+    });
+
+    res.json(response.data);
+
+  } catch (err: any) {
+    logger.error(err);
+    if (err.response) {
+      res.status(err.response.status).send(err.response.data);
+
+
+      return;
+    }
+    res.status(500).send({ message: "Internal Server Error" });
+    return;
+  }
+}
