@@ -18,6 +18,22 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface DeltaKeyMetricsProps {
   selectedTable: string;
@@ -34,6 +50,8 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
     lastCheckpoint: null as string | null,
   });
   const [totalSnapshotSizeMB, setTotalSnapshotSizeMB] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const basePath = useSelector((state: RootState) => state.tableCred.basePath);
 
@@ -194,6 +212,42 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
     return short.replace(/(.{18})/g, "$1\n");
   };
 
+  const formatFileName = (path: string) => {
+    const parts = path.split("/");
+    return parts[parts.length - 1];
+  };
+
+  const getPageRange = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+    const totalPages = Math.ceil((snapshotSizeData?.length || 0) / itemsPerPage);
+
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...');
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages);
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
+
   useEffect(() => {
     if (selectedTable) {
       fetchSmallFileProblem();
@@ -216,7 +270,7 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
     fullPath: file.path,
   }));
 
-  const MAX_POINTS = 20;
+  const MAX_POINTS = 50;
   let downsampledChartData = chartData;
   if (chartData.length > MAX_POINTS) {
     const step = Math.ceil(chartData.length / MAX_POINTS);
@@ -278,8 +332,145 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
           <CardContent>{totalSnapshotSizeMB}</CardContent>
         </Card>
       </div>
+      {chartData.length > 0 && (
+        <Card className="mt-6 min-w-[800px] overflow-x-auto">
+          <CardHeader>
+            <CardTitle>Snapshot Size Chart</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={snapshotChartConfig} className="h-[400px] w-full min-w-[700px]">
+              <LineChart data={downsampledChartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="shortPath"
+                  tickLine={false}
+                  axisLine={false}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  interval={0}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  label={{
+                    value: "Size (KB)",
+                    angle: -90,
+                    position: "insideLeft",
+                  }}
+                />
+                <ChartTooltip
+                  cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
+                  wrapperStyle={{
+                    zIndex: 100,
+                    position: "relative",
+                    transform: "translateY(-50px)",
+                  }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length > 0) {
+                      const data = payload[0].payload;
+                      return (
+                        <ChartTooltipContent indicator="dashed">
+                          <div className="space-y-2 p-2">
+                            <p className="text-sm font-medium break-all">
+                              File: {data.fullPath}
+                            </p>
+                            <p className="text-xs">Size: {data.sizeKB} KB</p>
+                          </div>
+                        </ChartTooltipContent>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="sizeKB"
+                  stroke="var(--color-primary)"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      )}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>File Details</CardTitle>
+          <CardDescription>
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, snapshotSizeData.length)} of {snapshotSizeData.length} files
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>File Name</TableHead>
+                  <TableHead className="text-right">Size (KB)</TableHead>
+                  <TableHead className="text-right">Last Modified</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {snapshotSizeData
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((file, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-mono text-xs">
+                        {formatFileName(file.path)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {file.sizeKB.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {new Date(file.lastModified).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {Math.ceil(snapshotSizeData.length / itemsPerPage) > 1 && (
+            <div className="mt-4 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    />
+                  </PaginationItem>
+                  {getPageRange().map((pageNum, i) => (
+                    <PaginationItem key={i}>
+                      {pageNum === '...' ? (
+                        <span className="px-4">...</span>
+                      ) : (
+                        <PaginationLink
+                          onClick={() => setCurrentPage(Number(pageNum))}
+                          isActive={currentPage === pageNum}
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      )}
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(Math.ceil(snapshotSizeData.length / itemsPerPage), p + 1))}
+                      disabled={currentPage === Math.ceil(snapshotSizeData.length / itemsPerPage)}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       {smallFileCnt > 0 ? (
-        <Card className="bg-yellow-50 border-yellow-300">
+        <Card className="mt-6 bg-yellow-50 border-yellow-300">
           <CardHeader className="flex flex-row items-start gap-3">
             <AlertTriangle className="text-yellow-600 mt-1" />
             <div>
@@ -296,7 +487,7 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-green-50 border-green-300">
+        <Card className="mt-6 bg-green-50 border-green-300">
           <CardHeader className="flex flex-row items-start gap-3">
             <CheckCircle className="text-green-600 mt-1" />
             <div>
@@ -309,66 +500,6 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
             </div>
           </CardHeader>
         </Card>
-      )}
-      {chartData.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-4">Snapshot Size Chart</h3>
-          <ChartContainer config={snapshotChartConfig} className="h-[300px]">
-            <LineChart data={downsampledChartData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="shortPath"
-                tickLine={false}
-                axisLine={false}
-                angle={-45}
-                textAnchor="end"
-                height={80}
-                interval={0}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                label={{
-                  value: "Size (KB)",
-                  angle: -90,
-                  position: "insideLeft",
-                }}
-              />
-              <ChartTooltip
-                cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
-                wrapperStyle={{
-                  zIndex: 100,
-                  position: "relative",
-                  transform: "translateY(-50px)",
-                }}
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length > 0) {
-                    const data = payload[0].payload;
-                    return (
-                      <ChartTooltipContent indicator="dashed">
-                        <div className="space-y-2 p-2">
-                          <p className="text-sm font-medium break-all">
-                            File: {data.fullPath}
-                          </p>
-                          <p className="text-xs">Size: {data.sizeKB} KB</p>
-                        </div>
-                      </ChartTooltipContent>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="sizeKB"
-                stroke="var(--color-primary)"
-                strokeWidth={2}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
-          </ChartContainer>
-        </div>
       )}
     </div>
   );
