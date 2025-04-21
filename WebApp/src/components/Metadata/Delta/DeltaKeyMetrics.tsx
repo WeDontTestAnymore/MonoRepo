@@ -73,19 +73,29 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
       const commitRes = await apiClient.post("/delta/commits", {
         deltaDirectory: reqPath,
       });
-      const commits = commitRes.data.commits || [];
-      const checkpoints = (commitRes.data.checkpointFiles || [])
-        .filter((file: string) => file.endsWith('.checkpoint.json'));
       
-      const lastCommitFile = commits.length > 0 ? commits[commits.length - 1] : null;
-      const commitNumber = lastCommitFile 
-        ? parseInt(lastCommitFile.replace(/^0+/, '').replace('.json', ''))
-        : -1;
+      const lastCommitFile = commitRes.data.lastCommit || "";
+      let commitNumber = -1;
+      
+      if (lastCommitFile) {
+        try {
+          const numberPart = lastCommitFile.replace(/^0+/, '').replace('.json', '');
+          commitNumber = numberPart === '' ? 0 : parseInt(numberPart);
+          if (isNaN(commitNumber)) {
+            commitNumber = 0;
+          }
+        } catch (e) {
+          commitNumber = 0;
+        }
+      }
+
+      const checkpoints = (commitRes.data.checkpointFiles || [])
+        .filter((file: string) => file.endsWith('.checkpoint.parquet'));
 
       setCommitMetrics({
-        numCommits: commitNumber + 1, 
+        numCommits: commitNumber, 
         numCheckpoints: checkpoints.length,
-        lastCommit: commitRes.data.lastCommit || lastCommitFile,
+        lastCommit: lastCommitFile,
         lastCheckpoint:
           checkpoints.length > 0 ? checkpoints[checkpoints.length - 1] : null,
       });
