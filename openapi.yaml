@@ -16,293 +16,740 @@ servers:
 security:
   - BearerAuth: []
 
+
 paths:
   /auth/login:
     post:
-      summary: Authenticate and register session
-      description: Logs in and registers a session with the backend.
-      operationId: authLogin
+      summary: Login
+      description: Login
+      operationId: login
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               type: object
               properties:
-                bucket_name:
-                  type: string
-                bucket_region:
-                  type: string
-                bucket_type:
-                  type: string
-                bucket_uri:
-                  type: string
                 bucket_access_key_id:
                   type: string
+                  example: minio
+                bucket_name:
+                  type: string
+                  example: warehouse
+                bucket_region:
+                  type: string
+                  example: ap-south-1
                 bucket_secret_access_key:
                   type: string
+                  example: minio123
+                bucket_type:
+                  type: string
+                  example: Other
+                bucket_uri:
+                  type: string
+                  example: http://minio:9000
+            example:
+              bucket_access_key_id: minio
+              bucket_name: warehouse
+              bucket_region: ap-south-1
+              bucket_secret_access_key: minio123
+              bucket_type: Other
+              bucket_uri: http://minio:9000
       responses:
-        "200":
-          description: Login successful
-        "400":
-          description: Invalid request
-
+        '200':
+          description: ''
   /bucket/scan:
     post:
-      summary: Scan the bucket for tables
-      description: Retrieves a list of tables from the specified bucket.
-      operationId: scanBucket
+      summary: Scan
+      description: Scan
+      operationId: scan
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               type: object
               properties:
                 maxDepth:
-                  type: integer
+                  type: number
+                  example: 2
+            example:
+              maxDepth: 2
       responses:
-        "200":
-          description: List of detected tables
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  tables:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        type:
-                          type: string
-                        path:
-                          type: string
-        "400":
-          description: Invalid request
-
+        '200':
+          description: ''
+  /bucket/scanParquet:
+    post:
+      summary: Parquet Scan
+      description: Parquet Scan
+      operationId: parquetScan
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                directoryPath:
+                  type: string
+                  example: s3://warehouse/customer_par
+            example:
+              directoryPath: s3://warehouse/customer_par
+      responses:
+        '200':
+          description: ''
   /delta/commits:
     post:
-      summary: Retrieve Delta commit file paths
-      operationId: getDeltaCommits
+      summary: Delta Commits
+      description: Delta Commits
+      operationId: deltaCommits
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeltaRequest"
+              type: object
+              properties:
+                deltaDirectory:
+                  type: string
+                  example: warehouse/delta_users
+            example:
+              deltaDirectory: warehouse/delta_users
       responses:
-        "200":
-          description: List of Delta commit files
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DeltaCommits"
-        "400":
-          description: Invalid request
-
-  /delta/schema:
+        '200':
+          description: ''
+  /delta/commitLog:
     post:
-      summary: Get Delta table schema at a commit
-      operationId: getDeltaSchema
+      summary: Delta Commits Log
+      description: Delta Commits Log
+      operationId: deltaCommitsLog
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeltaSchemaRequest"
+              type: object
+              properties:
+                deltaDirectory:
+                  type: string
+                  example: warehouse/delta_users
+            example:
+              deltaDirectory: warehouse/delta_users
       responses:
-        "200":
-          description: Table schema
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  schema:
-                    type: string
-        "400":
-          description: Invalid request
-
-  /delta/stats:
+        '200':
+          description: ''
+  /delta/details:
     post:
-      summary: Get Delta table statistics
-      operationId: getDeltaStats
+      summary: Delta Details
+      description: Delta Details
+      operationId: deltaDetails
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeltaSchemaRequest"
+              type: object
+              properties:
+                commitFilePath:
+                  type: string
+                  example: warehouse/delta_users/_delta_log/00000000000000000001.json
+            example:
+              commitFilePath: warehouse/delta_users/_delta_log/00000000000000000001.json
       responses:
-        "200":
-          description: Table statistics
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  stats:
-                    type: string
-        "400":
-          description: Invalid request
-
+        '200':
+          description: ''
+  /delta/commitSchema:
+    post:
+      summary: Delta Commit Schema
+      description: Delta Commit Schema
+      operationId: deltaCommitSchema
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                commitName:
+                  type: string
+                  example: 00000000000000000010.json
+                deltaDirectory:
+                  type: string
+                  example: warehouse/delta_users
+            example:
+              commitName: 00000000000000000010.json
+              deltaDirectory: warehouse/delta_users
+      responses:
+        '200':
+          description: ''
+  /delta/checkpointSchema:
+    post:
+      summary: Delta Checkpoint Schema
+      description: Delta Checkpoint Schema
+      operationId: deltaCheckpointSchema
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deltaDirectory:
+                  type: string
+                  example: s3://warehouse/delta_users
+                filePath:
+                  type: string
+                  example: >-
+                    s3://warehouse/delta_users/_delta_log/00000000000000000010.checkpoint.parquet
+            example:
+              deltaDirectory: s3://warehouse/delta_users
+              filePath: >-
+                s3://warehouse/delta_users/_delta_log/00000000000000000010.checkpoint.parquet
+      responses:
+        '200':
+          description: ''
+  /delta/smallFiles:
+    post:
+      summary: Delta SmallFiles
+      description: Delta SmallFiles
+      operationId: deltaSmallfiles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deltaDirectory:
+                  type: string
+                  example: warehouse/delta_users
+            example:
+              deltaDirectory: warehouse/delta_users
+      responses:
+        '200':
+          description: ''
+  /delta/smallFilesCSV:
+    post:
+      summary: Delta SmallFilesCSV
+      description: Delta SmallFilesCSV
+      operationId: deltaSmallfilescsv
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deltaDirectory:
+                  type: string
+                  example: warehouse/delta_users
+            example:
+              deltaDirectory: warehouse/delta_users
+      responses:
+        '200':
+          description: ''
+  /delta/snapshots:
+    post:
+      summary: Delta Snapshots
+      description: Delta Snapshots
+      operationId: deltaSnapshots
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deltaDirectory:
+                  type: string
+                  example: warehouse/delta_users
+            example:
+              deltaDirectory: warehouse/delta_users
+      responses:
+        '200':
+          description: ''
+  /delta/snapshotSize:
+    post:
+      summary: Delta Snapshots Details
+      description: Delta Snapshots Details
+      operationId: deltaSnapshotsDetails
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deltaDirectory:
+                  type: string
+                  example: warehouse/delta_users
+            example:
+              deltaDirectory: warehouse/delta_users
+      responses:
+        '200':
+          description: ''
+  /delta/sampleData:
+    post:
+      summary: Delta Sample Data
+      description: Delta Sample Data
+      operationId: deltaSampleData
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filePath:
+                  type: string
+                  example: >-
+                    warehouse/delta_users/part-00000-17250a06-e634-4d3f-8094-27f5b8d31036-c000.snappy.parquet
+                limit:
+                  type: number
+                  example: 5
+            example:
+              filePath: >-
+                warehouse/delta_users/part-00000-17250a06-e634-4d3f-8094-27f5b8d31036-c000.snappy.parquet
+              limit: 5
+      responses:
+        '200':
+          description: ''
   /hudi/versioning:
-    get:
-      summary: Retrieve Hudi table versioning information
-      operationId: getHudiVersioning
+    post:
+      summary: Hudi Partitions
+      description: Hudi Partitions
+      operationId: hudiPartitions
       parameters:
-        - $ref: "#/components/parameters/HudiQueryParams"
+        - name: endpoint
+          in: query
+          schema:
+            type: string
+            example: http://minio:9000
+        - name: access_key
+          in: query
+          schema:
+            type: string
+            example: minio
+        - name: secret_key
+          in: query
+          schema:
+            type: string
+            example: minio123
+        - name: bucket_name
+          in: query
+          schema:
+            type: string
+            example: warehouse
+        - name: hudi_table_path
+          in: query
+          schema:
+            type: string
+            example: dummy_hudi_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hudi_table_path:
+                  type: string
+                  example: dummy_hudi_table
+            example:
+              hudi_table_path: dummy_hudi_table
       responses:
-        "200":
-          description: Versioning details of the Hudi table
-        "400":
-          description: Invalid request
-
-  /hudi/schema:
-    get:
-      summary: Retrieve Hudi table schema
-      operationId: getHudiSchema
-      parameters:
-        - $ref: "#/components/parameters/HudiQueryParams"
-      responses:
-        "200":
-          description: Schema of the Hudi table
-        "400":
-          description: Invalid request
-
-  /hudi/partitions:
-    get:
-      summary: Retrieve Hudi table partition details
-      operationId: getHudiPartitions
-      parameters:
-        - $ref: "#/components/parameters/HudiQueryParams"
-      responses:
-        "200":
-          description: Partition details
-        "400":
-          description: Invalid request
-
+        '200':
+          description: ''
   /hudi/sample-data:
-    get:
-      summary: Retrieve sample data from a Hudi table
-      operationId: getHudiSampleData
+    post:
+      summary: Hudi Sample Data
+      description: Hudi Sample Data
+      operationId: hudiSampleData
       parameters:
-        - $ref: "#/components/parameters/HudiQueryParams"
+        - name: endpoint
+          in: query
+          schema:
+            type: string
+            example: http://minio:9000
+        - name: access_key
+          in: query
+          schema:
+            type: string
+            example: minio
+        - name: secret_key
+          in: query
+          schema:
+            type: string
+            example: minio123
+        - name: bucket_name
+          in: query
+          schema:
+            type: string
+            example: warehouse
+        - name: hudi_table_path
+          in: query
+          schema:
+            type: string
+            example: dummy_hudi_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hudi_table_path:
+                  type: string
+                  example: dummy_hudi_table
+            example:
+              hudi_table_path: dummy_hudi_table
       responses:
-        "200":
-          description: Sample data from the Hudi table
-        "400":
-          description: Invalid request
-
+        '200':
+          description: ''
   /hudi/key-metrics:
-    get:
-      summary: Retrieve key metrics of a Hudi table
-      operationId: getHudiKeyMetrics
+    post:
+      summary: Hudi KeyMetrics
+      description: Hudi KeyMetrics
+      operationId: hudiKeymetrics
       parameters:
-        - $ref: "#/components/parameters/HudiQueryParams"
+        - name: endpoint
+          in: query
+          schema:
+            type: string
+            example: http://minio:9000
+        - name: access_key
+          in: query
+          schema:
+            type: string
+            example: minio
+        - name: secret_key
+          in: query
+          schema:
+            type: string
+            example: minio123
+        - name: bucket_name
+          in: query
+          schema:
+            type: string
+            example: warehouse
+        - name: hudi_table_path
+          in: query
+          schema:
+            type: string
+            example: dummy_hudi_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hudi_table_path:
+                  type: string
+                  example: dummy_hudi_table
+            example:
+              hudi_table_path: dummy_hudi_table
       responses:
-        "200":
-          description: Key metrics of the Hudi table
-        "400":
-          description: Invalid request
-
+        '200':
+          description: ''
+  /hudi/schema:
+    post:
+      summary: Hudi Schema
+      description: Hudi Schema
+      operationId: hudiSchema
+      parameters:
+        - name: endpoint
+          in: query
+          schema:
+            type: string
+            example: http://minio:9000
+        - name: access_key
+          in: query
+          schema:
+            type: string
+            example: minio
+        - name: secret_key
+          in: query
+          schema:
+            type: string
+            example: minio123
+        - name: bucket_name
+          in: query
+          schema:
+            type: string
+            example: warehouse
+        - name: hudi_table_path
+          in: query
+          schema:
+            type: string
+            example: dummy_hudi_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hudi_table_path:
+                  type: string
+                  example: dummy_hudi_table
+            example:
+              hudi_table_path: dummy_hudi_table
+      responses:
+        '200':
+          description: ''
+  /hudi/tables:
+    post:
+      summary: Hudi Tables
+      description: Hudi Tables
+      operationId: hudiTables
+      parameters:
+        - name: endpoint
+          in: query
+          schema:
+            type: string
+            example: http://minio:9000
+        - name: access_key
+          in: query
+          schema:
+            type: string
+            example: minio
+        - name: secret_key
+          in: query
+          schema:
+            type: string
+            example: minio123
+        - name: bucket_name
+          in: query
+          schema:
+            type: string
+            example: warehouse
+        - name: hudi_table_path
+          in: query
+          schema:
+            type: string
+            example: dummy_hudi_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hudi_table_path:
+                  type: string
+                  example: dummy_hudi_table
+            example:
+              hudi_table_path: dummy_hudi_table
+      responses:
+        '200':
+          description: ''
   /hudi/small-files-warning:
-    get:
-      summary: Retrieve small files warning for a Hudi table
-      operationId: getHudiSmallFilesWarning
+    post:
+      summary: Hudi Small Files
+      description: Hudi Small Files
+      operationId: hudiSmallFiles
       parameters:
-        - $ref: "#/components/parameters/HudiQueryParams"
+        - name: endpoint
+          in: query
+          schema:
+            type: string
+            example: http://minio:9000
+        - name: access_key
+          in: query
+          schema:
+            type: string
+            example: minio
+        - name: secret_key
+          in: query
+          schema:
+            type: string
+            example: minio123
+        - name: bucket_name
+          in: query
+          schema:
+            type: string
+            example: warehouse
+        - name: hudi_table_path
+          in: query
+          schema:
+            type: string
+            example: dummy_hudi_table
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hudi_table_path:
+                  type: string
+                  example: dummy_hudi_table
+            example:
+              hudi_table_path: dummy_hudi_table
       responses:
-        "200":
-          description: Small file warnings
-        "400":
-          description: Invalid request
+        '200':
+          description: ''
+  /iceberg/schema/details:
+    post:
+      summary: Iceberg Schema Details
+      description: Iceberg Schema Details
+      operationId: icebergSchemaDetails
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icebergPath:
+                  type: string
+                  example: >-
+                    s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+            example:
+              icebergPath: s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+      responses:
+        '200':
+          description: ''
+  /iceberg/schema/sampleData:
+    post:
+      summary: Iceberg Sample Data
+      description: Iceberg Sample Data
+      operationId: icebergSampleData
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icebergPath:
+                  type: string
+                  example: >-
+                    s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+            example:
+              icebergPath: s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+      responses:
+        '200':
+          description: ''
+  /iceberg/properties/show:
+    post:
+      summary: Iceberg Properties
+      description: Iceberg Properties
+      operationId: icebergProperties
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icebergPath:
+                  type: string
+                  example: >-
+                    s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+            example:
+              icebergPath: s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+      responses:
+        '200':
+          description: ''
+  /iceberg/properties/manifestFiles:
+    post:
+      summary: Iceberg Manifest Files
+      description: Iceberg Manifest Files
+      operationId: icebergManifestFiles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icebergPath:
+                  type: string
+                  example: >-
+                    s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+            example:
+              icebergPath: s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+      responses:
+        '200':
+          description: ''
+  /iceberg/versions/all:
+    post:
+      summary: Iceberg Versions
+      description: Iceberg Versions
+      operationId: icebergVersions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icebergPath:
+                  type: string
+                  example: >-
+                    s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+            example:
+              icebergPath: s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+      responses:
+        '200':
+          description: ''
+  /iceberg/keyMetrics/fileData:
+    post:
+      summary: Iceberg KeyMetrics
+      description: Iceberg KeyMetrics
+      operationId: icebergKeymetrics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icebergPath:
+                  type: string
+                  example: >-
+                    s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+            example:
+              icebergPath: s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+      responses:
+        '200':
+          description: ''
+  /iceberg/keyMetrics/overhead:
+    post:
+      summary: Iceberg Overhead
+      description: Iceberg Overhead
+      operationId: icebergOverhead
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icebergPath:
+                  type: string
+                  example: >-
+                    s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+            example:
+              icebergPath: s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+      responses:
+        '200':
+          description: ''
+  /iceberg/keyMetrics/overheadCSV:
+    post:
+      summary: Iceberg OverheadCSV
+      description: Iceberg OverheadCSV
+      operationId: icebergOverheadcsv
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icebergPath:
+                  type: string
+                  example: >-
+                    s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+            example:
+              icebergPath: s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+      responses:
+        '200':
+          description: ''
+  /iceberg/snapshots/show:
+    post:
+      summary: Iceberg Snapshots
+      description: Iceberg Snapshots
+      operationId: icebergSnapshots
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                icebergPath:
+                  type: string
+                  example: >-
+                    s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+            example:
+              icebergPath: s3://warehouse/customer_iceberg-08c4506ce0094a3ba4a6850a3c990478
+      responses:
+        '200':
+          description: ''
+tags: []
 
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  schemas:
-    DeltaRequest:
-      type: object
-      properties:
-        accessKey:
-          type: string
-        secretKey:
-          type: string
-        region:
-          type: string
-        endpoint:
-          type: string
-        urlStyle:
-          type: string
-        deltaDirectory:
-          type: string
-
-    DeltaCommits:
-      type: object
-      properties:
-        success:
-          type: boolean
-        commits:
-          type: array
-          items:
-            type: object
-            properties:
-              fileName:
-                type: string
-              version:
-                type: integer
-              size:
-                type: integer
-              lastModified:
-                type: string
-              path:
-                type: string
-        totalCommits:
-          type: integer
-        latestCommit:
-          type: object
-        oldestCommit:
-          type: object
-        metadata:
-          type: object
-
-    DeltaSchemaRequest:
-      type: object
-      properties:
-        accessKey:
-          type: string
-        secretKey:
-          type: string
-        region:
-          type: string
-        endpoint:
-          type: string
-        urlStyle:
-          type: string
-        fileDirectory:
-          type: string
-
-  parameters:
-    HudiQueryParams:
-      name: queryParams
-      in: query
-      required: true
-      schema:
-        type: object
-        properties:
-          endpoint:
-            type: string
-          access_key:
-            type: string
-          secret_key:
-            type: string
-          bucket_name:
-            type: string
-          hudi_table_path:
-            type: string
