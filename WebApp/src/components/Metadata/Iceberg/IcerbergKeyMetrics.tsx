@@ -19,6 +19,22 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface IcebergKeyMetricsProps {
   selectedTable: string;
@@ -28,6 +44,9 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
   const [loading, setLoading] = useState(false);
   const [fileData, setFileData] = useState<any[]>([]);
   const [overheadCnt, setOverheadCnt] = useState(0);
+  const [detailedFileData, setDetailedFileData] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const basePath = useSelector((state: RootState) => state.tableCred.basePath);
 
@@ -50,7 +69,8 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
         keyMetricsResponse.status === 200 &&
         keyMetricsResponse.data?.fileData
       ) {
-        setFileData(keyMetricsResponse.data.fileData); // Fixed incorrect data access
+        setFileData(keyMetricsResponse.data.fileData);
+        setDetailedFileData(keyMetricsResponse.data.fileData);
 
         const overheadCntResponse = await apiClient.post(
           "/iceberg/keyMetrics/overhead",
@@ -77,7 +97,7 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
       const response = await apiClient.post(
         "/iceberg/keyMetrics/overheadCSV",
         { icebergPath },
-        { responseType: "blob" } // Treat response as file
+        { responseType: "blob" }
       );
 
       const filename =
@@ -102,6 +122,11 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
     } catch (error) {
       toast.error("Error downloading data. Please try again later.");
     }
+  };
+
+  const formatFilePath = (path: string) => {
+    const parts = path.split("/");
+    return parts[parts.length - 1];
   };
 
   const chartData = fileData.map((item) => {
@@ -150,10 +175,47 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
 
   const isUnpartitioned = fileData.length > 0 && fileData[0].partition === null;
 
+  const paginatedData = detailedFileData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(detailedFileData.length / itemsPerPage);
+
+  const getPageRange = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...');
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages);
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
+
   return (
-    <div>
-      <Card className="w-full">
-        <CardHeader>
+    <div className="w-full px-4 md:px-8">
+      <Card className="w-full min-w-[800px] overflow-x-auto">
+        <CardHeader className="px-6">
           <CardTitle>Iceberg Table Metrics</CardTitle>
           <CardDescription>
             {selectedTable} -{" "}
@@ -162,13 +224,13 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
               : `Partitions by ${chartData[0]?.partitionKey}`}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6">
           {loading ? (
             <div className="space-y-2">
-              <Skeleton className="h-[300px] w-full" />
+              <Skeleton className="h-[400px] w-full" />
             </div>
           ) : isUnpartitioned ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Total Rows</CardTitle>
@@ -189,14 +251,25 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
               </Card>
             </div>
           ) : fileData.length > 0 ? (
-            <ChartContainer config={chartConfig} className="h-[300px]">
-              <BarChart accessibilityLayer data={chartData}>
+            <ChartContainer
+              config={chartConfig}
+              className="h-[450px] w-full min-w-[700px]"
+            >
+              <BarChart
+                accessibilityLayer
+                data={chartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+              >
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="partitionValue"
                   tickLine={false}
-                  tickMargin={10}
+                  tickMargin={35}
                   axisLine={false}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                  fontSize={12}
                 />
                 <YAxis tickLine={false} tickMargin={10} axisLine={false} />
                 <ChartTooltip
@@ -231,23 +304,110 @@ const IcerbergKeyMetrics = ({ selectedTable }: IcebergKeyMetricsProps) => {
               </BarChart>
             </ChartContainer>
           ) : (
-            <div className="flex h-[300px] items-center justify-center">
+            <div className="flex h-[400px] items-center justify-center">
               <p className="text-muted-foreground">No data available</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {overheadCnt > 0 && (
-        <div className="mt-4 flex items-center justify-between rounded-md border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-800">
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="h-5 w-5 text-yellow-700" />
-            <span>Overhead Warning: Number of small files = {overheadCnt}</span>
+      <Card className="mt-6 min-w-[800px]">
+        <CardHeader>
+          <CardTitle>File Details</CardTitle>
+          <CardDescription>
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, detailedFileData.length)} of {detailedFileData.length} files
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Partition Key</TableHead>
+                  <TableHead className="text-right">Row Count</TableHead>
+                  <TableHead className="text-right">Size</TableHead>
+                  <TableHead>File Name</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedData.map((file, index) => {
+                  const partitionKey = file.partition
+                    ? Object.values(file.partition)[0]
+                    : "unpartitioned";
+                  return (
+                    <TableRow key={index}>
+                      <TableCell>{partitionKey}</TableCell>
+                      <TableCell className="text-right">
+                        {file.row_count}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {(Number(file.size_bytes) / 1024).toFixed(2)} KB
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {formatFilePath(file.file_path)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
-          <Button size="sm" variant="outline" onClick={handleDownloadOverhead}>
-            <Download className="mr-2 h-4 w-4" />
-            Download Overhead Data
-          </Button>
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    />
+                  </PaginationItem>
+                  {getPageRange().map((pageNum, i) => (
+                    <PaginationItem key={i}>
+                      {pageNum === '...' ? (
+                        <span className="px-4">...</span>
+                      ) : (
+                        <PaginationLink
+                          onClick={() => setCurrentPage(Number(pageNum))}
+                          isActive={currentPage === pageNum}
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      )}
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {overheadCnt > 0 && (
+        <div className="mt-6 min-w-[800px]">
+          <div className="flex items-center justify-between rounded-md border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-800">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-700" />
+              <span>
+                Overhead Warning: Number of small files = {overheadCnt}
+              </span>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDownloadOverhead}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download Overhead Data
+            </Button>
+          </div>
         </div>
       )}
     </div>
