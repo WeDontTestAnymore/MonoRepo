@@ -74,13 +74,18 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
         deltaDirectory: reqPath,
       });
       const commits = commitRes.data.commits || [];
-      const checkpoints = commitRes.data.checkpointFiles || [];
+      const checkpoints = (commitRes.data.checkpointFiles || [])
+        .filter((file: string) => file.endsWith('.checkpoint.json'));
+      
+      const lastCommitFile = commits.length > 0 ? commits[commits.length - 1] : null;
+      const commitNumber = lastCommitFile 
+        ? parseInt(lastCommitFile.replace(/^0+/, '').replace('.json', ''))
+        : -1;
+
       setCommitMetrics({
-        numCommits: commits.length,
+        numCommits: commitNumber + 1, 
         numCheckpoints: checkpoints.length,
-        lastCommit:
-          commitRes.data.lastCommit ||
-          (commits.length > 0 ? commits[commits.length - 1] : null),
+        lastCommit: commitRes.data.lastCommit || lastCommitFile,
         lastCheckpoint:
           checkpoints.length > 0 ? checkpoints[checkpoints.length - 1] : null,
       });
@@ -238,7 +243,7 @@ const DeltaKeyMetrics = ({ selectedTable }: DeltaKeyMetricsProps) => {
           <CardHeader>
             <CardTitle>Checkpoints</CardTitle>
           </CardHeader>
-          <CardContent>{commitMetrics.numCheckpoints + 1}</CardContent>
+          <CardContent>{commitMetrics.numCheckpoints}</CardContent>
         </Card>
         <Card>
           <CardHeader>
