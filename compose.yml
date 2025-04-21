@@ -1,15 +1,15 @@
+# -------------------------------------------------------------------------------
+#  Directly compose up this file to BUILD and run all services
+# -------------------------------------------------------------------------------
 version: "3.9"
 services:
   db:
     image: postgres
-    # container_name: metalensdb 
     shm_size: 128mb
     volumes:
       - postgresdb:/data/postgres
     ports:
       - "5433:5432"
-    # networks:
-    #   - hackathon
     environment:
       POSTGRES_USER: "root"
       POSTGRES_PASSWORD: "123"
@@ -19,51 +19,46 @@ services:
 
   iceberg:
     container_name: iceberg-service
-    image: ghcr.io/wedonttestanymore/iceberg-service:latest
+    build:
+      context: ./IcebergService
     ports:
       - "3001:3000"
     environment:
       - PORT=3000
-    # networks:
-    #   - hackathon
 
   delta:
     container_name: delta-service
-    image: ghcr.io/wedonttestanymore/delta-service:latest
+    build:
+      context: ./DeltaService
     ports:
       - "3002:3002"
     environment:
       - PORT=3002
-    # networks:
-    #   - hackathon
 
   hudi:
     container_name: hudi-service
-    image: ghcr.io/wedonttestanymore/hudi-service:latest
+    build:
+      context: ./HudiService/fastapi-hudi
     ports:
       - "8000:8000"
-    # networks:
-    #   - hackathon
 
   parquet:
     container_name: parquet-service
-    image: ghcr.io/wedonttestanymore/parquet-service:latest
+    build:
+      context: ./ParquetService
     ports:
       - "3004:3004"
     environment:
       - PORT=3004
-    # networks:
-    #   - hackathon
 
   backend:
-    image: ghcr.io/wedonttestanymore/api-service
+    build:
+      context: ./APIService
     container_name: api_backend
     depends_on:
       - db
     ports:
       - "3000:3000"
-    # networks:
-    #   - hackathon
     environment:
       - DB_URI=postgresql://root:123@db:5432/hack
       - LOGGING=1
@@ -74,47 +69,154 @@ services:
       - DELTA_SERVICE_URL=http://delta-service:3002
       - HUDI_SERVICE_URL=http://hudi-service:8000
       - PARQUET_SERVICE_URL=http://parquet-service:3004
-      # - BUCKET_URI=http://minio:9000
     restart: unless-stopped
 
   frontend:
-    image: ghcr.io/wedonttestanymore/webapp
+    build:
+      context: ./WebApp
     container_name: webapp
     depends_on: 
       - backend
     ports:
       - "5173:5173"
     restart: unless-stopped
-    # networks:
-      # - hackathon
-
-  # minio:
-  #   image: minio/minio
-  #   container_name: minio
-  #   ports:
-  #     - "9000:9000" # API port
-  #     - "9001:9001" # Console port
-  #   volumes:
-  #     - minio_data:/data
-  #   environment:
-  #     MINIO_ROOT_USER: minio
-  #     MINIO_ROOT_PASSWORD: minio123
-  #   command: server --console-address ":9001" /data
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-  #     interval: 30s
-  #     timeout: 20s
-  #     retries: 3
-  #   restart: unless-stopped
-  #   networks:
-  #     - hackathon
 
 volumes:
   postgresdb:
-  # minio_data:
-    # external: true
 
 networks:
   default:
     name: hackathon 
     external: true
+
+
+
+
+# -------------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------------
+#  Alternatively, comment above code, and uncomment below to use pre-built images
+# -------------------------------------------------------------------------------
+
+
+# version: "3.9"
+# services:
+#   db:
+#     image: postgres
+#     # container_name: metalensdb 
+#     shm_size: 128mb
+#     volumes:
+#       - postgresdb:/data/postgres
+#     ports:
+#       - "5433:5432"
+#     # networks:
+#     #   - hackathon
+#     environment:
+#       POSTGRES_USER: "root"
+#       POSTGRES_PASSWORD: "123"
+#       PGDATA: /data/postgres
+#       POSTGRES_DB: hack
+#     restart: unless-stopped
+#
+#   iceberg:
+#     container_name: iceberg-service
+#     image: ghcr.io/wedonttestanymore/iceberg-service:latest
+#     ports:
+#       - "3001:3000"
+#     environment:
+#       - PORT=3000
+#     # networks:
+#     #   - hackathon
+#
+#   delta:
+#     container_name: delta-service
+#     image: ghcr.io/wedonttestanymore/delta-service:latest
+#     ports:
+#       - "3002:3002"
+#     environment:
+#       - PORT=3002
+#     # networks:
+#     #   - hackathon
+#
+#   hudi:
+#     container_name: hudi-service
+#     image: ghcr.io/wedonttestanymore/hudi-service:latest
+#     ports:
+#       - "8000:8000"
+#     # networks:
+#     #   - hackathon
+#
+#   parquet:
+#     container_name: parquet-service
+#     image: ghcr.io/wedonttestanymore/parquet-service:latest
+#     ports:
+#       - "3004:3004"
+#     environment:
+#       - PORT=3004
+#     # networks:
+#     #   - hackathon
+#
+#   backend:
+#     image: ghcr.io/wedonttestanymore/api-service
+#     container_name: api_backend
+#     depends_on:
+#       - db
+#     ports:
+#       - "3000:3000"
+#     # networks:
+#     #   - hackathon
+#     environment:
+#       - DB_URI=postgresql://root:123@db:5432/hack
+#       - LOGGING=1
+#       - BACKEND_PORT=3000
+#       - COOKIE_TIMEOUT_MIN=60
+#       - MAX_SCAN_DEPTH=2
+#       - ICEBERG_SERVICE_URL=http://iceberg-service:3000
+#       - DELTA_SERVICE_URL=http://delta-service:3002
+#       - HUDI_SERVICE_URL=http://hudi-service:8000
+#       - PARQUET_SERVICE_URL=http://parquet-service:3004
+#       # - BUCKET_URI=http://minio:9000
+#     restart: unless-stopped
+#
+#   frontend:
+#     image: ghcr.io/wedonttestanymore/webapp
+#     container_name: webapp
+#     depends_on: 
+#       - backend
+#     ports:
+#       - "5173:5173"
+#     restart: unless-stopped
+#     # networks:
+#       # - hackathon
+#
+#   # minio:
+#   #   image: minio/minio
+#   #   container_name: minio
+#   #   ports:
+#   #     - "9000:9000" # API port
+#   #     - "9001:9001" # Console port
+#   #   volumes:
+#   #     - minio_data:/data
+#   #   environment:
+#   #     MINIO_ROOT_USER: minio
+#   #     MINIO_ROOT_PASSWORD: minio123
+#   #   command: server --console-address ":9001" /data
+#   #   healthcheck:
+#   #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+#   #     interval: 30s
+#   #     timeout: 20s
+#   #     retries: 3
+#   #   restart: unless-stopped
+#   #   networks:
+#   #     - hackathon
+#
+# volumes:
+#   postgresdb:
+#   # minio_data:
+#     # external: true
+#
+# networks:
+#   default:
+#     name: hackathon 
+#     external: true
